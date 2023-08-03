@@ -1,5 +1,7 @@
-keboola.component==1.4.0
+keboola.component==1.4.3
 keboola.utils
-keboola.http-client
+# keboola.http-client
 mock
 freezegun
+google-api-python-client
+google-auth-oauthlib

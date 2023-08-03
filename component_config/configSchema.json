@@ -1,19 +1,100 @@
 {
+  "title": "Youtube Reports",
   "type": "object",
-  "title": "extractor configuration",
   "required": [
-    "print_hello"
+    "input_variant"
   ],
   "properties": {
-    "print_hello": {
-      "type": "boolean",
-      "title": "Print Hello",
-      "propertyOrder": 1
+    "input_variant": {
+      "type": "string",
+      "title": "Content owner specification",
+      "propertyOrder": 100,
+      "description": "You may choose to generate reports for login user (default) or for selected content owner",
+      "enum": [
+        "use_login_owner",
+        "use_selected_owner"
+      ],
+      "options": {
+        "enum_titles": [
+          "Login user is also the content owner",
+          "Selected content owner"
+        ]
+      },
+      "default": "use_login_owner"
+    },
+    "content_owner": {
+      "type": "string",
+      "title": "Content owner",
+      "propertyOrder": 200,
+      "minLength": 1,
+      "description": "Enter ID of selected content owner.",
+      "options": {
+        "dependencies": {
+          "input_variant": "use_selected_owner"
+        }
+      }
+    },
+    "report_types": {
+      "type": "array",
+      "title": "Report types",
+      "propertyOrder": 200,
+      "minLength": 1,
+      "description": "Enter ID of selected content owner.",
+      "format": "select",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "channel_annotations_a1",
+          "channel_basic_a2",
+          "channel_cards_a1",
+          "channel_combined_a2",
+          "channel_demographics_a1",
+          "channel_device_os_a2",
+          "channel_end_screens_a1",
+          "channel_playback_location_a2",
+          "channel_province_a2",
+          "channel_sharing_service_a1",
+          "channel_subtitles_a2",
+          "channel_traffic_source_a2",
+          "playlist_basic_a1",
+          "playlist_combined_a1",
+          "playlist_device_os_a1",
+          "playlist_playback_location_a1",
+          "playlist_province_a1",
+          "playlist_traffic_source_a1"
+        ],
+        "options": {
+          "enum_titles": [
+            "Annotations",
+            "User activity",
+            "Cards",
+            "Combined",
+            "Demographics",
+            "Device and OS",
+            "End screens",
+            "Playback locations",
+            "Province",
+            "Sharing service",
+            "Subtitles",
+            "Traffic sources",
+            "Playlist user activity",
+            "Playlist combined",
+            "Playlist device and OS",
+            "Playlist playback locations",
+            "Playlist province",
+            "Playlist traffic sources"
+          ]
+        }
+      }
     },
     "debug": {
       "type": "boolean",
+      "propertyOrder": 700,
       "title": "Debug",
-      "propertyOrder": 2
+      "hidden": true,
+      "description": "When checked, logging will be more verbose",
+      "format": "checkbox"
     }
   }
 }
