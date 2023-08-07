@@ -113,7 +113,7 @@ class Client:
         results = self.service.jobs().list(**kwargs).execute()
         return results.get('jobs')
 
-    def list_reports(self, job_id: str, on_behalf_of_owner: str = ''):
+    def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = ''):
         """List reports associated with specified job
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs.reports/list
@@ -122,6 +122,8 @@ class Client:
             job_id: ID of a job - must be specified
             on_behalf_of_owner: If specified then specific channel owner reports will be listed.
                 If not specified then current user channel reports will be listed.
+            created_after: Filter only reports newer than specified date.
+                It is the best practice to specify value of createTime of latest retrieved report.
 
         Returns:
             A list of retrieved reports. Example:
@@ -138,9 +140,11 @@ class Client:
             ]
 
         """
-        kwargs = {}
+        kwargs = dict()
         if on_behalf_of_owner:
             kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+        if created_after:
+            kwargs['createdAfter'] = created_after
         reports = []
         while True:
             results = self.service.jobs().reports().list(jobId=job_id, **kwargs).execute()
@@ -189,21 +193,28 @@ if __name__ == '__main__':
     # result = client.list_report_types(include_system_managed=False)
     # print(f'Number of report types: {len(result)}')
     # for item in result:
-    #     print(item['id'], item['name'])
+    #     # print(item['id'], item['name'])
+    #     print(item)
 
-    # result = client.create_job(name='my_province', report_type_id='channel_province_a2')
+    # result = client.create_job(name='my_province_druha', report_type_id='channel_province_a2')
     # print(f'JOB CREATED: {result}')
 
-    result = client.list_jobs(include_system_managed=False)
-    print(f'Number of jobs: {len(result)}')
-    for item in result:
-        print(item['id'], item['name'], item['reportTypeId'])
-        reports = client.list_reports(item['id'])
-        for report in reports:
-            print(f'   {report}')
+    # result = client.list_jobs(include_system_managed=False)
+    # print(f'Number of jobs: {len(result)}')
+    # for item in result:
+    #     # print(item['id'], item['name'], item['reportTypeId'])
+    #     print(item)
+    #     reports = client.list_reports(item['id'])
+    #     for report in reports:
+    #         print(f'   {report}')
+    # filename = f'C:\\Users\\DK\\Revolt\\Projects\\kds-team.ex-youtube-analytics\\data\\' \
+    #            f'out/tmp/{item["reportTypeId"]}_{report["createTime"].replace(":","-")}.csv'
+    # client.read_report_file(filename, report['downloadUrl'])
 
-    # result = client.list_reports('7a25fac7-a579-46ba-9aa2-6349600bd6eb')
-    # print(len(result))
+    result = client.list_reports('7a25fac7-a579-46ba-9aa2-6349600bd6eb', created_after='2023-07-26T07:41:15.298797Z')
+    print(len(result))
+    for report in result:
+        print(report)
 
     # result = client.get_report(job_id='7a25fac7-a579-46ba-9aa2-6349600bd6eb', report_id='8652265865')
     #

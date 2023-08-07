@@ -2,9 +2,17 @@
   "title": "Youtube Reports",
   "type": "object",
   "required": [
-    "input_variant"
+    "input_variant",
+    "report_types"
   ],
   "properties": {
+    "#api_token": {
+        "type": "string",
+        "title": "API token",
+        "description": "Just a temporary solution prior to having OAuth authorization ready",
+        "format": "password",
+        "propertyOrder": 1
+    },
     "input_variant": {
       "type": "string",
       "title": "Content owner specification",

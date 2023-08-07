@@ -5,3 +5,6 @@ mock
 freezegun
 google-api-python-client
 google-auth-oauthlib
+
+pyhocon~=0.3.60
+dataconf~=2.2.1
