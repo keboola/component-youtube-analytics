@@ -1,6 +1,8 @@
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.errors import HttpError
+from google.oauth2.credentials import Credentials
 import io
 
 SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
@@ -10,18 +12,23 @@ API_VERSION = 'v1'
 
 class Client:
 
-    def __init__(self, client_id: str, app_secret: str, token_data: dict):
+    def __init__(self, access_token: str = None, client_id: str = None, app_secret: str = None,
+                 token_data: dict = None):
         self.service = None
-        client_secrets = {
-            "web": {
-                "client_id": client_id,
-                "client_secret": app_secret,
-                "redirect_uris": ["https://www.example.com/oauth2callback"],
-                "auth_uri": "https://oauth2.googleapis.com/auth",
-                "token_uri": "https://oauth2.googleapis.com/token"
+        if access_token:
+            credentials = Credentials(token=access_token)
+            pass
+        else:
+            client_secrets = {
+                "web": {
+                    "client_id": client_id,
+                    "client_secret": app_secret,
+                    "redirect_uris": ["https://www.example.com/oauth2callback"],
+                    "auth_uri": "https://oauth2.googleapis.com/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token"
+                }
             }
-        }
-        credentials = Flow.from_client_config(client_secrets, scopes=SCOPES, token=token_data).credentials
+            credentials = Flow.from_client_config(client_secrets, scopes=SCOPES, token=token_data).credentials
         self.service = build(serviceName=API_SERVICE_NAME,
                              version=API_VERSION,
                              credentials=credentials)
@@ -81,6 +88,24 @@ class Client:
             kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
         results = self.service.jobs().create(body=body, **kwargs).execute()
         return results
+
+    def delete_job(self, job_id: str, on_behalf_of_owner=''):
+        """Delete existing job
+
+        Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/delete
+
+        """
+        # TODO: complete method documentation
+        kwargs = {}
+        if on_behalf_of_owner:
+            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+        try:
+            results = self.service.jobs().delete(jobId=job_id, **kwargs).execute()
+        except HttpError as ex:
+            # we allow for non-existent job, other errors will be propagated
+            if ex.status_code != 404:
+                raise ex
+
 
     def list_jobs(self, on_behalf_of_owner: str = '', include_system_managed=False):
         """List jobs
@@ -175,6 +200,7 @@ class Client:
 if __name__ == '__main__':
     import os
 
+    ACCESS_TOKEN_EXAMPLE = os.environ['ACCESS_TOKEN_EXAMPLE']
     REFRESH_TOKEN_EXAMPLE = os.environ['REFRESH_TOKEN_EXAMPLE']
     CLIENT_ID_EXAMPLE = os.environ['CLIENT_ID_EXAMPLE']
     CLIENT_SECRET_EXAMPLE = os.environ['CLIENT_SECRET_EXAMPLE']
@@ -186,9 +212,10 @@ if __name__ == '__main__':
         'token_type': 'Bearer'
     }
 
-    client = Client(client_id=CLIENT_ID_EXAMPLE,
-                    app_secret=CLIENT_SECRET_EXAMPLE,
-                    token_data=token_data_example)
+    # client = Client(client_id=CLIENT_ID_EXAMPLE,
+    #                 app_secret=CLIENT_SECRET_EXAMPLE,
+    #                 token_data=token_data_example)
+    client = Client(access_token=ACCESS_TOKEN_EXAMPLE)
 
     # result = client.list_report_types(include_system_managed=False)
     # print(f'Number of report types: {len(result)}')
@@ -199,11 +226,11 @@ if __name__ == '__main__':
     # result = client.create_job(name='my_province_druha', report_type_id='channel_province_a2')
     # print(f'JOB CREATED: {result}')
 
-    # result = client.list_jobs(include_system_managed=False)
-    # print(f'Number of jobs: {len(result)}')
-    # for item in result:
-    #     # print(item['id'], item['name'], item['reportTypeId'])
-    #     print(item)
+    result = client.list_jobs(include_system_managed=False)
+    print(f'Number of jobs: {len(result)}')
+    for item in result:
+        # print(item['id'], item['name'], item['reportTypeId'])
+        print(item)
     #     reports = client.list_reports(item['id'])
     #     for report in reports:
     #         print(f'   {report}')
@@ -211,13 +238,15 @@ if __name__ == '__main__':
     #            f'out/tmp/{item["reportTypeId"]}_{report["createTime"].replace(":","-")}.csv'
     # client.read_report_file(filename, report['downloadUrl'])
 
-    result = client.list_reports('7a25fac7-a579-46ba-9aa2-6349600bd6eb', created_after='2023-07-26T07:41:15.298797Z')
-    print(len(result))
-    for report in result:
-        print(report)
+    # result = client.list_reports('7a25fac7-a579-46ba-9aa2-6349600bd6eb', created_after='2023-07-26T07:41:15.298797Z')
+    # print(len(result))
+    # for report in result:
+    #     print(report)
 
     # result = client.get_report(job_id='7a25fac7-a579-46ba-9aa2-6349600bd6eb', report_id='8652265865')
     #
     # client.read_report_file('output.txt', downloadUrl=result['downloadUrl'])
+
+    # client.delete_job(job_id='12443452')
 
     pass
