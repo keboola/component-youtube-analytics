@@ -2,14 +2,14 @@
 Template Component main class.
 
 """
-import csv
 import logging
-from datetime import datetime
+import os
 
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
+from report_types import report_types
 
 # configuration variables
 KEY_API_TOKEN = '#api_token'
@@ -34,8 +34,8 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
+        self.conf = None
         self.client_yt = None
-        self.conf: Configuration = None
 
     @property
     def client(self):
@@ -93,7 +93,7 @@ class Component(ComponentBase):
                 continue  # we do not remove a job that we did not have created
             if self.conf.content_owner is not previous_state['onBehalfOfContentOwner'] or \
                     key not in self.conf.report_types:
-                self.client.delete_job(on_behalf_of_owner=previous_state['onBehalfOfContentOwner'])
+                self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'])
 
         all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner)
 
@@ -104,6 +104,7 @@ class Component(ComponentBase):
             "onBehalfOfContentOwner": self.conf.content_owner,
             "jobs": dict()
         }
+
         for report_type_id in self.conf.report_types:
             # search corresponding job among all available jobs
             job_created = False
@@ -123,24 +124,23 @@ class Component(ComponentBase):
         for job in new_state['jobs']:
             self.process_job(job)
 
-        # Create output table (Tabledefinition - just metadata)
-        table = self.create_out_table_definition('output.csv', incremental=True, primary_key=['timestamp'])
+        # table = self.create_out_table_definition('output.csv', incremental=True, primary_key=['timestamp'])
 
         # get file path of the table (data/out/tables/Features.csv)
-        out_table_path = table.full_path
-        logging.info(out_table_path)
+        # out_table_path = table.full_path
+        # logging.info(out_table_path)
 
         # DO whatever and save into out_table_path
-        with open(table.full_path, mode='wt', encoding='utf-8', newline='') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=['timestamp'])
-            writer.writeheader()
-            writer.writerow({"timestamp": datetime.now().isoformat()})
+        # with open(table.full_path, mode='wt', encoding='utf-8', newline='') as out_file:
+        #     writer = csv.DictWriter(out_file, fieldnames=['timestamp'])
+        #     writer.writeheader()
+        #     writer.writerow({"timestamp": datetime.now().isoformat()})
 
         # Save table manifest (output.csv.manifest) from the tabledefinition
-        self.write_manifest(table)
+        # self.write_manifest(table)
 
         # Write new state - will be available next run
-        self.write_state_file({"some_state_parameter": "value"})
+        self.write_state_file(new_state)
 
     def process_job(self, job):
         """
@@ -152,29 +152,46 @@ class Component(ComponentBase):
             createTime: str - system information (example: "2023-08-01T21:36:11Z")
             lastReport": object - information about last retrieved report
                 id: str - report ID (example: "8630070020")
-                startTime: str - start of reported period (example: "2023-06-26T07:00:00Z")
-                endTime: str - end of reported period (example: "2023-06-27T07:00:00Z")
                 createTime: str - time of report creation (example: "2023-07-26T07:36:39.102883Z")
 
         """
+        report_type_id = job['reportTypeId']
+        table_def = self.create_out_table_definition(f'{report_type_id}.csv',
+                                                     incremental=True,
+                                                     primary_key=report_types[report_type_id]['dimensions'])
+        os.makedirs(table_def.full_path, exist_ok=True)
+        self.write_manifest(table_def)
+
+        # TODO: rozmyslet setrideni a prohledavani reportu - je mozne, ze budeme muset uchovavat tabulku
+        # obsahujici jak createTime tak id casove rozpeti, pro ktere jsme zapisovali.
+        # je mozne, ze vznikaji nove soubory pro konkretni casovy rozsah z minulost
+        # Algoritmus:
+        # pamatujeme si datum posledniho generovaneho soboru.
+        # pri dalsim cteni se tedy objevi soubory, ktere jsou i za starsi obdobi
+        # ale vzdy jsou to prirustky.
+        # ve vysledne sestave tedy hledame mnoziny reportu pro jedno obdobi z nich najdeme posledni vytvoreny.
+        # nestaci se spolahat na ot, ze cas vytvoreni soucasne i usporada obdobi !!!
+        # Kazdopadne ale staci zapamatovat si cas posledniho vytvorenenho - priste jiz budeme cist pouze nove reporty.
+
         last_report_create_time = job['lastReport']['createTime'] if 'lastReport' in job else None
         reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
-        reports = sorted(reports, key=lambda d: d['createTime'])
+        reports = sorted(reports, key=lambda d: d['startTime']+d['createTime'])
         last_written = None
         for index in range(len(reports)):
             report = reports[index]
-            if index+1 == len(reports) or report['endTime'] != reports[index+1]['endTime']:
-                filename = report['endTime']+'.csv'
-                filename = filename.replace(':', '_')
+            if index+1 == len(reports) or report['startTime'] != reports[index+1]['startTime']:
+                filename = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
                 self.write_report(filename, report['downloadUrl'])
                 last_written = report
 
         if last_written:
-            # TODO: Instead of explicit dict construction use dict operations (exclue / include) against report
+            # TODO: Instead of explicit dict construction use dict operations (exclude / include) against report
             job['lastReport'] = {
-                'id': report['id'],
-                'createTime': report['createTime']
+                'id': last_written['id'],
+                'createTime': last_written['createTime']
             }
+
+        pass
 
     def write_report(self, filename, downloadUrl):
         self.client.read_report_file(filename, downloadUrl)

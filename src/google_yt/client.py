@@ -105,7 +105,7 @@ class Client:
             # we allow for non-existent job, other errors will be propagated
             if ex.status_code != 404:
                 raise ex
-
+        return results
 
     def list_jobs(self, on_behalf_of_owner: str = '', include_system_managed=False):
         """List jobs
