@@ -83,10 +83,6 @@ class Component(ComponentBase):
         if 'jobs' not in previous_state:
             previous_state['jobs'] = dict()
 
-        # TODO: Remove the code - it is just for development
-        for job in previous_state['jobs'].values():
-            self.process_job(job)
-
         # Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state['jobs'].items():
             if not job.get('created'):
@@ -97,9 +93,6 @@ class Component(ComponentBase):
 
         all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner)
 
-        # Make sure that there is a job for each requested report type.
-        # When a job is missing it is created.
-        #
         new_state = {
             "onBehalfOfContentOwner": self.conf.content_owner,
             "jobs": dict()
@@ -124,22 +117,6 @@ class Component(ComponentBase):
         for job in new_state['jobs']:
             self.process_job(job)
 
-        # table = self.create_out_table_definition('output.csv', incremental=True, primary_key=['timestamp'])
-
-        # get file path of the table (data/out/tables/Features.csv)
-        # out_table_path = table.full_path
-        # logging.info(out_table_path)
-
-        # DO whatever and save into out_table_path
-        # with open(table.full_path, mode='wt', encoding='utf-8', newline='') as out_file:
-        #     writer = csv.DictWriter(out_file, fieldnames=['timestamp'])
-        #     writer.writeheader()
-        #     writer.writerow({"timestamp": datetime.now().isoformat()})
-
-        # Save table manifest (output.csv.manifest) from the tabledefinition
-        # self.write_manifest(table)
-
-        # Write new state - will be available next run
         self.write_state_file(new_state)
 
     def process_job(self, job):
@@ -149,12 +126,15 @@ class Component(ComponentBase):
             id: str - job ID as maintained by the system
             reportTypeId: str - system information
             name: str - arbitrary name of the job
-            createTime: str - system information (example: "2023-08-01T21:36:11Z")
-            lastReport": object - information about last retrieved report
-                id: str - report ID (example: "8630070020")
-                createTime: str - time of report creation (example: "2023-07-26T07:36:39.102883Z")
+            createTime: str - system information about the job (example: "2023-08-01T21:36:11Z")
+            lastReportCreateTime": object - information about last retrieved report
 
         """
+        last_report_create_time = job.get('lastReportCreateTime')
+        reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
+        if not reports:
+            return
+
         report_type_id = job['reportTypeId']
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
                                                      incremental=True,
@@ -162,43 +142,18 @@ class Component(ComponentBase):
         os.makedirs(table_def.full_path, exist_ok=True)
         self.write_manifest(table_def)
 
-        # TODO: rozmyslet setrideni a prohledavani reportu - je mozne, ze budeme muset uchovavat tabulku
-        # obsahujici jak createTime tak id casove rozpeti, pro ktere jsme zapisovali.
-        # je mozne, ze vznikaji nove soubory pro konkretni casovy rozsah z minulost
-        # Algoritmus:
-        # pamatujeme si datum posledniho generovaneho soboru.
-        # pri dalsim cteni se tedy objevi soubory, ktere jsou i za starsi obdobi
-        # ale vzdy jsou to prirustky.
-        # ve vysledne sestave tedy hledame mnoziny reportu pro jedno obdobi z nich najdeme posledni vytvoreny.
-        # nestaci se spolahat na ot, ze cas vytvoreni soucasne i usporada obdobi !!!
-        # Kazdopadne ale staci zapamatovat si cas posledniho vytvorenenho - priste jiz budeme cist pouze nove reporty.
-
-        last_report_create_time = job['lastReport']['createTime'] if 'lastReport' in job else None
-        reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
-        reports = sorted(reports, key=lambda d: d['startTime']+d['createTime'])
-        last_written = None
+        reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
+        job['lastReportCreateTime'] = reports[0]['createTime']
+        reports = sorted(reports, key=lambda d: d['startTime'] + d['createTime'])
         for index in range(len(reports)):
             report = reports[index]
-            if index+1 == len(reports) or report['startTime'] != reports[index+1]['startTime']:
+            if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
                 self.write_report(filename, report['downloadUrl'])
-                last_written = report
-
-        if last_written:
-            # TODO: Instead of explicit dict construction use dict operations (exclude / include) against report
-            job['lastReport'] = {
-                'id': last_written['id'],
-                'createTime': last_written['createTime']
-            }
-
         pass
 
     def write_report(self, filename, downloadUrl):
         self.client.read_report_file(filename, downloadUrl)
-        # TODO: read response - we probably do not need it ...
-        pass
-
-        # ####### EXAMPLE TO REMOVE END
 
 
 """
