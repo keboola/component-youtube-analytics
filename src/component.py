@@ -11,15 +11,6 @@ from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
 
-# configuration variables
-KEY_API_TOKEN = '#api_token'
-KEY_PRINT_HELLO = 'print_hello'
-
-# list of mandatory parameters => if some is missing,
-# component will fail with readable message on initialization.
-REQUIRED_PARAMETERS = [KEY_PRINT_HELLO]
-REQUIRED_IMAGE_PARS = []
-
 
 class Component(ComponentBase):
     """
@@ -30,6 +21,8 @@ class Component(ComponentBase):
         relative to working directory.
 
         If `debug` parameter is present in the `config.json`, the default logger is set to verbose DEBUG mode.
+
+        The extractor algorithm is documented under the Component.run(self) method.
     """
 
     def __init__(self):
@@ -38,7 +31,15 @@ class Component(ComponentBase):
         self.client_yt = None
 
     @property
-    def client(self):
+    def client(self) -> Client:
+        """Retrieve google client for communication to the YT reporting service.
+
+        If this is the first access to a client, application tries to create it. There are two options available:
+        1) Create a client just by supplying an access token found in parameters as '#api_token'.
+            It is used just during development when OAuth2 was not yet provided.
+        2) Create a client using OAuth credentials from component configuration.
+            This option ignores 'access_token'. It always creates a new token from a 'refresh_token'
+        """
         if not self.client_yt:
             user = passwd = ''
             token_data = None
@@ -56,14 +57,39 @@ class Component(ComponentBase):
         return self.client_yt
 
     def run(self):
-        """
-        Main execution code
+        """Main execution code
+
+        1) Initialize Configurtion based on parameters section of component configuration
+
+        2) Retrieve state information on running the component.
+            The state comprises information of last run of the component:
+            - onBehalfOfContentOwner .. ID of content owner if explicit owner was used
+            - jobs .. mapping of report_type_id to existing jobs.
+                Each job contains following fields:
+                - created .. True / False flag indicating whether the job was created by the component
+                - id .. ID of the job
+                - lastReportCreateTime .. used as a filter to optimize number of requests to the API
+
+        3) State cleanup
+            Remove jobs that were created by the component but that are not requested in current run.
+            (because of a change in component configuration)
+
+        4) Create needed job(s)
+            If a report type is requested for which there is no job in the system then such a job is created.
+
+        5) Download reports
+            For each requested report type check whether there were new report data available.
+            When there are new report(s) for specific reporty type then collect most up-to-date information
+            and prepare incremental output table for it.
+
+        6) Write new state
         """
 
+        # 1) Initialize Configuration
         params = self.configuration.parameters
         self.conf = Configuration.fromDict(parameters=params)
 
-        # Check configuration - report problem early
+        # Check configuration validity - report problem early
         if not self.conf.report_types:
             raise UserException('Configuration has no report types specified')
         if self.conf.input_variant == InputVariantEnum.use_selected_owner and not self.conf.content_owner:
@@ -73,7 +99,7 @@ class Component(ComponentBase):
         if self.conf.input_variant is not InputVariantEnum.use_selected_owner:
             self.conf.content_owner = ''
 
-        # get last state data/in/state.json from previous run
+        # 2) Retrieve state - get last state data/in/state.json from previous run
         previous_state = self.get_state_file()
         logging.debug(f'Original state: {previous_state}')
 
@@ -83,7 +109,7 @@ class Component(ComponentBase):
         if 'jobs' not in previous_state:
             previous_state['jobs'] = dict()
 
-        # Cleanup - remove created (by this configuration) jobs that are not requested
+        # 3) Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state['jobs'].items():
             if not job.get('created'):
                 continue  # we do not remove a job that we did not have created
@@ -98,6 +124,7 @@ class Component(ComponentBase):
             "jobs": dict()
         }
 
+        # 4) Create needed jobs
         for report_type_id in self.conf.report_types:
             # search corresponding job among all available jobs
             job_created = False
@@ -114,27 +141,38 @@ class Component(ComponentBase):
                 new_state['jobs'][report_type_id] = job
                 job['created'] = job_created
 
+        # 5) Download reports
         for job in new_state['jobs']:
             self.process_job(job)
 
+        # 6) Write new state
         self.write_state_file(new_state)
 
     def process_job(self, job):
-        """
+        """Process reports associated with a job
+
+        There is one job for each report_type_id. There may be more reports associated with a job.
+        Each report comprises data for one 24hour period. System may generate more than one report
+        for each 24hour period. It makes sense to consider only the latest (report's createTime)
+        report associated with specific 24hour period.
+
         job attributes:
-            created: boolean - flag whether the job was created by this configuration
-            id: str - job ID as maintained by the system
-            reportTypeId: str - system information
-            name: str - arbitrary name of the job
-            createTime: str - system information about the job (example: "2023-08-01T21:36:11Z")
-            lastReportCreateTime": object - information about last retrieved report
+            - created: boolean - flag whether the job was created by this configuration
+            - id: str - job ID as maintained by the system
+            - reportTypeId: str - system information
+            - name: str - arbitrary name of the job
+            - createTime: str - system information about the job (example: "2023-08-01T21:36:11Z")
+            - lastReportCreateTime": str - information about last retrieved report
 
         """
+
+        # Retrie reports that were not processed yet (if no state info available then request all)
         last_report_create_time = job.get('lastReportCreateTime')
         reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
         if not reports:
             return
 
+        # Prepare output table description (manifest)
         report_type_id = job['reportTypeId']
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
                                                      incremental=True,
@@ -142,17 +180,22 @@ class Component(ComponentBase):
         os.makedirs(table_def.full_path, exist_ok=True)
         self.write_manifest(table_def)
 
+        # Retrieve create time of the latest available report and store it in the new state
         reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
         job['lastReportCreateTime'] = reports[0]['createTime']
+        # Sort list of reports based on data period (startTime) and then on creation time (createTime).
         reports = sorted(reports, key=lambda d: d['startTime'] + d['createTime'])
         for index in range(len(reports)):
             report = reports[index]
+            # Consider only the last report among a set of reports for specific data period
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
                 self.write_report(filename, report['downloadUrl'])
         pass
 
     def write_report(self, filename, downloadUrl):
+        """Download a report from medial URL to target CSV file
+        """
         self.client.read_report_file(filename, downloadUrl)
 
 

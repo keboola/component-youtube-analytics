@@ -182,11 +182,11 @@ class Client:
 
         return reports
 
-    def get_report(self, job_id: str, report_id: str, **kwargs):
-        results = self.service.jobs().reports().get(jobId=job_id, reportId=report_id, **kwargs).execute()
-        return results
-
     def read_report_file(self, filename: str, downloadUrl: str):
+        """Download generated report (specified by media URL) into a local file.
+
+        GCP library provides dedicated method to download a stream of data into a local file.
+        """
         request = self.service.media().download_media(resourceName='')
         request.uri = downloadUrl
         out_file = io.FileIO(filename, mode='wb')
@@ -196,57 +196,28 @@ class Client:
             _, download_finished = downloader.next_chunk()
         pass
 
-
-if __name__ == '__main__':
-    import os
-
-    ACCESS_TOKEN_EXAMPLE = os.environ['ACCESS_TOKEN_EXAMPLE']
-    REFRESH_TOKEN_EXAMPLE = os.environ['REFRESH_TOKEN_EXAMPLE']
-    CLIENT_ID_EXAMPLE = os.environ['CLIENT_ID_EXAMPLE']
-    CLIENT_SECRET_EXAMPLE = os.environ['CLIENT_SECRET_EXAMPLE']
-
-    token_data_example = {
-        'expires_at': 22222,
-        'access_token': 'neverusedcanbeanything',
-        'refresh_token': REFRESH_TOKEN_EXAMPLE,
-        'token_type': 'Bearer'
-    }
+# if __name__ == '__main__':
+#     import os
+#
+#     ACCESS_TOKEN_EXAMPLE = os.environ['ACCESS_TOKEN_EXAMPLE']
+#     REFRESH_TOKEN_EXAMPLE = os.environ['REFRESH_TOKEN_EXAMPLE']
+#     CLIENT_ID_EXAMPLE = os.environ['CLIENT_ID_EXAMPLE']
+#     CLIENT_SECRET_EXAMPLE = os.environ['CLIENT_SECRET_EXAMPLE']
+#
+#     token_data_example = {
+#         'expires_at': 22222,
+#         'access_token': 'neverusedcanbeanything',
+#         'refresh_token': REFRESH_TOKEN_EXAMPLE,
+#         'token_type': 'Bearer'
+#     }
 
     # client = Client(client_id=CLIENT_ID_EXAMPLE,
     #                 app_secret=CLIENT_SECRET_EXAMPLE,
     #                 token_data=token_data_example)
-    client = Client(access_token=ACCESS_TOKEN_EXAMPLE)
+    # client = Client(access_token=ACCESS_TOKEN_EXAMPLE)
 
     # result = client.list_report_types(include_system_managed=False)
     # print(f'Number of report types: {len(result)}')
     # for item in result:
     #     # print(item['id'], item['name'])
     #     print(item)
-
-    # result = client.create_job(name='my_province_druha', report_type_id='channel_province_a2')
-    # print(f'JOB CREATED: {result}')
-
-    result = client.list_jobs(include_system_managed=False)
-    print(f'Number of jobs: {len(result)}')
-    for item in result:
-        # print(item['id'], item['name'], item['reportTypeId'])
-        print(item)
-    #     reports = client.list_reports(item['id'])
-    #     for report in reports:
-    #         print(f'   {report}')
-    # filename = f'C:\\Users\\DK\\Revolt\\Projects\\kds-team.ex-youtube-analytics\\data\\' \
-    #            f'out/tmp/{item["reportTypeId"]}_{report["createTime"].replace(":","-")}.csv'
-    # client.read_report_file(filename, report['downloadUrl'])
-
-    # result = client.list_reports('7a25fac7-a579-46ba-9aa2-6349600bd6eb', created_after='2023-07-26T07:41:15.298797Z')
-    # print(len(result))
-    # for report in result:
-    #     print(report)
-
-    # result = client.get_report(job_id='7a25fac7-a579-46ba-9aa2-6349600bd6eb', report_id='8652265865')
-    #
-    # client.read_report_file('output.txt', downloadUrl=result['downloadUrl'])
-
-    # client.delete_job(job_id='12443452')
-
-    pass
