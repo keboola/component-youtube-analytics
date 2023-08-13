@@ -4,9 +4,11 @@ Template Component main class.
 """
 import logging
 import os
+import datetime
 
-from keboola.component.base import ComponentBase
+from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
+from keboola.component.sync_actions import SelectElement
 from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
@@ -142,7 +144,7 @@ class Component(ComponentBase):
                 job['created'] = job_created
 
         # 5) Download reports
-        for job in new_state['jobs']:
+        for job in new_state['jobs'].values():
             self.process_job(job)
 
         # 6) Write new state
@@ -172,6 +174,12 @@ class Component(ComponentBase):
         if not reports:
             return
 
+        if self.conf.history_days:
+            date_filter = (datetime.date.today() - datetime.timedelta(days=self.conf.history_days)).isoformat()
+            reports = [report for report in reports if report['startTime'] > date_filter]
+        if not reports:
+            return
+
         # Prepare output table description (manifest)
         report_type_id = job['reportTypeId']
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
@@ -194,9 +202,15 @@ class Component(ComponentBase):
         pass
 
     def write_report(self, filename, downloadUrl):
-        """Download a report from medial URL to target CSV file
+        """Download a report from media URL to target CSV file
         """
         self.client.read_report_file(filename, downloadUrl)
+
+    @sync_action('list_report_types')
+    def list_report_types(self):
+        report_type_ids = self.client.list_report_types()
+        results = [SelectElement(value=tid['id'], label=f"{tid['name']} ({tid['id']})") for tid in report_type_ids]
+        return results
 
 
 """

@@ -19,6 +19,7 @@ class ConfigurationBase:
 class Configuration(ConfigurationBase):
     input_variant: InputVariantEnum
     report_types: list[str]
+    history_days: int = 0
     content_owner: str = ''
     debug: bool = False
 
@@ -26,6 +27,7 @@ class Configuration(ConfigurationBase):
 if __name__ == '__main__':
     _parameters = {
         "#api_token": "fdsfda",
+        "history_days": 3,
         "input_variant": "use_selected_owner",
         "content_owner": "1434234",
         "report_types": ["channel_cards_a1", "channel_device_os_a2"],
