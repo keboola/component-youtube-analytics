@@ -184,9 +184,11 @@ class Component(ComponentBase):
         report_type_id = job['reportTypeId']
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
                                                      incremental=True,
-                                                     primary_key=report_types[report_type_id]['dimensions'])
+                                                     is_sliced=True,
+                                                     primary_key=report_types[report_type_id]['dimensions'],
+                                                     )
         os.makedirs(table_def.full_path, exist_ok=True)
-        self.write_manifest(table_def)
+        # self.write_manifest(table_def)
 
         # Retrieve create time of the latest available report and store it in the new state
         reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
@@ -199,7 +201,8 @@ class Component(ComponentBase):
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
                 self.write_report(filename, report['downloadUrl'])
-        pass
+
+        self.write_manifest(table_def)
 
     def write_report(self, filename, downloadUrl):
         """Download a report from media URL to target CSV file
