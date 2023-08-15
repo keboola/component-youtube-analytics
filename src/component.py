@@ -5,6 +5,7 @@ Template Component main class.
 import logging
 import os
 import datetime
+import csv
 
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
@@ -185,9 +186,13 @@ class Component(ComponentBase):
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
                                                      incremental=True,
                                                      is_sliced=True,
-                                                     primary_key=report_types[report_type_id]['dimensions'],
+                                                     primary_key=report_types[report_type_id]['dimensions']
                                                      )
         os.makedirs(table_def.full_path, exist_ok=True)
+
+        report_raw_full_path = f'{self.files_out_path}/{report_type_id}.csv'
+        os.makedirs(report_raw_full_path, exist_ok=True)
+
         # self.write_manifest(table_def)
 
         # Retrieve create time of the latest available report and store it in the new state
@@ -199,10 +204,33 @@ class Component(ComponentBase):
             report = reports[index]
             # Consider only the last report among a set of reports for specific data period
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
-                filename = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
-                self.write_report(filename, report['downloadUrl'])
+                filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
+                filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
+                self.write_report(filename_raw, report['downloadUrl'])
+                if not table_def.columns:
+                    columns = self._read_columns(filename_raw)
+                    table_def.columns = columns
+                self._strip_header(filename_raw, filename_tgt)
 
         self.write_manifest(table_def)
+
+    @staticmethod
+    def _read_columns(filename) -> list:
+        with open(filename) as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=',')
+            header = next(csvreader)
+            return header
+
+    @staticmethod
+    def _strip_header(filename_raw, filename_tgt):
+        with open(filename_raw, mode='rt') as src, open(filename_tgt, mode='wt') as tgt:
+            src.readline()
+            while True:
+                row = src.readline()
+                if not row:
+                    break
+                tgt.write(row)
+        pass
 
     def write_report(self, filename, downloadUrl):
         """Download a report from media URL to target CSV file
