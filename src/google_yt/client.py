@@ -189,12 +189,13 @@ class Client:
         """
         request = self.service.media().download_media(resourceName='')
         request.uri = downloadUrl
-        out_file = io.FileIO(filename, mode='wb')
-        downloader = MediaIoBaseDownload(out_file, request, chunksize=8192)
-        download_finished = False
-        while download_finished is False:
-            _, download_finished = downloader.next_chunk()
-        pass
+
+        with io.FileIO(filename, mode='wb') as out_file:
+            downloader = MediaIoBaseDownload(out_file, request, chunksize=8192)
+            download_finished = False
+            while download_finished is False:
+                _, download_finished = downloader.next_chunk()
+            pass
 
 # if __name__ == '__main__':
 #     import os

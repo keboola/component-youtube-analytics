@@ -13,12 +13,6 @@
       "format": "password",
       "propertyOrder": 10
     },
-    "history_days": {
-      "type": "integer",
-      "title": "Maximum history days to include",
-      "description": "You may reduce history to avoid report read quota problem (zero means no limit)",
-      "propertyOrder": 20
-    },
     "input_variant": {
       "type": "string",
       "title": "Content owner specification",

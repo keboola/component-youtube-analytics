@@ -4,7 +4,7 @@ Template Component main class.
 """
 import logging
 import os
-import datetime
+import time
 import csv
 
 from keboola.component.base import ComponentBase, sync_action
@@ -13,6 +13,7 @@ from keboola.component.sync_actions import SelectElement
 from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
+from googleapiclient.errors import HttpError
 
 
 class Component(ComponentBase):
@@ -170,16 +171,13 @@ class Component(ComponentBase):
         """
 
         # Retrie reports that were not processed yet (if no state info available then request all)
+        logging.debug(f'Processing job: {job.get("reportTypeId")}')
         last_report_create_time = job.get('lastReportCreateTime')
         reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
         if not reports:
             return
 
-        if self.conf.history_days:
-            date_filter = (datetime.date.today() - datetime.timedelta(days=self.conf.history_days)).isoformat()
-            reports = [report for report in reports if report['startTime'] > date_filter]
-        if not reports:
-            return
+        logging.debug(f'   Number of reports to be processed: {len(reports)}')
 
         # Prepare output table description (manifest)
         report_type_id = job['reportTypeId']
@@ -235,7 +233,17 @@ class Component(ComponentBase):
     def write_report(self, filename, downloadUrl):
         """Download a report from media URL to target CSV file
         """
-        self.client.read_report_file(filename, downloadUrl)
+        while True:
+            try:
+                self.client.read_report_file(filename, downloadUrl)
+                return
+            except HttpError as error:
+                if error.status_code == 429:
+                    logging.debug(f'Quota limit exceeded reading {filename}')
+                    time.sleep(30)
+                    logging.debug(f'Resuming {filename}')
+                else:
+                    raise error
 
     @sync_action('list_report_types')
     def list_report_types(self):

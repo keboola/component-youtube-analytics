@@ -19,7 +19,6 @@ class ConfigurationBase:
 class Configuration(ConfigurationBase):
     input_variant: InputVariantEnum
     report_types: list[str]
-    history_days: int = 0
     content_owner: str = ''
     debug: bool = False
 
