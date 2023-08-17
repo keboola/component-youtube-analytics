@@ -52,13 +52,48 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": []
+        "enum": [
+          "channel_annotations_a1",
+          "channel_basic_a2",
+          "channel_cards_a1",
+          "channel_combined_a2",
+          "channel_demographics_a1",
+          "channel_device_os_a2",
+          "channel_end_screens_a1",
+          "channel_playback_location_a2",
+          "channel_province_a2",
+          "channel_sharing_service_a1",
+          "channel_subtitles_a2",
+          "channel_traffic_source_a2",
+          "playlist_basic_a1",
+          "playlist_combined_a1",
+          "playlist_device_os_a1",
+          "playlist_playback_location_a1",
+          "playlist_province_a1",
+          "playlist_traffic_source_a1"
+        ]
       },
       "options": {
-        "async": {
-          "label": "Load report types",
-          "action": "list_report_types"
-        }
+       "enum_titles": [
+            "Annotations",
+            "User activity",
+            "Cards",
+            "Combined",
+            "Demographics",
+            "Device and OS",
+            "End screens",
+            "Playback locations",
+            "Province",
+            "Sharing service",
+            "Subtitles",
+            "Traffic sources",
+            "Playlist user activity",
+            "Playlist combined",
+            "Playlist device and OS",
+            "Playlist playback locations",
+            "Playlist province",
+            "Playlist traffic sources"
+          ]
       }
     },
     "debug": {

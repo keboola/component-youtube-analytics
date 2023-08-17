@@ -245,11 +245,13 @@ class Component(ComponentBase):
                 else:
                     raise error
 
-    @sync_action('list_report_types')
-    def list_report_types(self):
-        report_type_ids = self.client.list_report_types()
-        results = [SelectElement(value=tid['id'], label=f"{tid['name']} ({tid['id']})") for tid in report_type_ids]
-        return results
+    # Eventually we opted not to read report type ids dynamically.
+    # Instead, we just use fixed set of types as retrieved from the API documentation.
+    # @sync_action('list_report_types')
+    # def list_report_types(self):
+    #     report_type_ids = self.client.list_report_types()
+    #     results = [SelectElement(value=tid['id'], label=f"{tid['name']} ({tid['id']})") for tid in report_type_ids]
+    #     return results
 
 
 """
