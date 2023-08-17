@@ -7,9 +7,8 @@ import os
 import time
 import csv
 
-from keboola.component.base import ComponentBase, sync_action
+from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
-from keboola.component.sync_actions import SelectElement
 from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
