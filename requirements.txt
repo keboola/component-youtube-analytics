@@ -8,3 +8,5 @@ google-auth-oauthlib
 
 pyhocon~=0.3.60
 dataconf~=2.2.1
+
+backoff

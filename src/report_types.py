@@ -1,3 +1,13 @@
+"""
+Each output table is associated with a specific report type ID.
+Here were prepared a structure listing dimensions a metrics that appear in specific report type ID.
+We currently use only 'dimensions' list to specify which columns compose a primary key of the table.
+The 'metrics' list are not used. We have it here only for completion.
+
+Information on dimensions and metrics for individual report type IDs was retrieved from documentation found here:
+- https://developers.google.com/youtube/reporting/v1/reports/channel_reports
+"""
+
 report_types = {
     'channel_basic_a2': {
         'dimensions': ['date', 'channel_id', 'video_id', 'live_or_on_demand', 'subscribed_status', 'country_code'],

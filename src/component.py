@@ -1,10 +1,9 @@
 """
-Template Component main class.
+Component is a main class implementing specific YouTube reporting extractor.
 
 """
 import logging
 import os
-import time
 import csv
 
 from keboola.component.base import ComponentBase
@@ -13,6 +12,7 @@ from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
 from googleapiclient.errors import HttpError
+import backoff
 
 
 class Component(ComponentBase):
@@ -62,7 +62,7 @@ class Component(ComponentBase):
     def run(self):
         """Main execution code
 
-        1) Initialize Configurtion based on parameters section of component configuration
+        1) Initialize Configuration based on parameters section of component configuration
 
         2) Retrieve state information on running the component.
             The state comprises information of last run of the component:
@@ -89,8 +89,7 @@ class Component(ComponentBase):
         """
 
         # 1) Initialize Configuration
-        params = self.configuration.parameters
-        self.conf = Configuration.fromDict(parameters=params)
+        self.conf = Configuration.fromDict(parameters=self.configuration.parameters)
 
         # Check configuration validity - report problem early
         if not self.conf.report_types:
@@ -114,10 +113,9 @@ class Component(ComponentBase):
 
         # 3) Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state['jobs'].items():
-            if not job.get('created'):
-                continue  # we do not remove a job that we did not have created
-            if self.conf.content_owner is not previous_state['onBehalfOfContentOwner'] or \
-                    key not in self.conf.report_types:
+            if job.get('created') and \
+                    (self.conf.content_owner is not previous_state['onBehalfOfContentOwner']
+                     or key not in self.conf.report_types):
                 self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'])
 
         all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner)
@@ -179,6 +177,7 @@ class Component(ComponentBase):
         logging.debug(f'   Number of reports to be processed: {len(reports)}')
 
         # Prepare output table description (manifest)
+        # Note: We specify keys here but update columns information only after reports were downloaded
         report_type_id = job['reportTypeId']
         table_def = self.create_out_table_definition(f'{report_type_id}.csv',
                                                      incremental=True,
@@ -190,16 +189,15 @@ class Component(ComponentBase):
         report_raw_full_path = f'{self.files_out_path}/{report_type_id}.csv'
         os.makedirs(report_raw_full_path, exist_ok=True)
 
-        # self.write_manifest(table_def)
-
         # Retrieve create time of the latest available report and store it in the new state
         reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
+        # By updating job object here we actually update an item in new state
         job['lastReportCreateTime'] = reports[0]['createTime']
         # Sort list of reports based on data period (startTime) and then on creation time (createTime).
         reports = sorted(reports, key=lambda d: d['startTime'] + d['createTime'])
         for index in range(len(reports)):
             report = reports[index]
-            # Consider only the last report among a set of reports for specific data period
+            # Consider only the last report among a set of reports for specific date period
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
                 filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
@@ -208,7 +206,7 @@ class Component(ComponentBase):
                     columns = self._read_columns(filename_raw)
                     table_def.columns = columns
                 self._strip_header(filename_raw, filename_tgt)
-
+        # We store the manifest only after columns were updated according to downloaded report
         self.write_manifest(table_def)
 
     @staticmethod
@@ -229,20 +227,11 @@ class Component(ComponentBase):
                 tgt.write(row)
         pass
 
+    @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24)
     def write_report(self, filename, downloadUrl):
         """Download a report from media URL to target CSV file
         """
-        while True:
-            try:
-                self.client.read_report_file(filename, downloadUrl)
-                return
-            except HttpError as error:
-                if error.status_code == 429:
-                    logging.debug(f'Quota limit exceeded reading {filename}')
-                    time.sleep(30)
-                    logging.debug(f'Resuming {filename}')
-                else:
-                    raise error
+        self.client.read_report_file(filename, downloadUrl)
 
     # Eventually we opted not to read report type ids dynamically.
     # Instead, we just use fixed set of types as retrieved from the API documentation.

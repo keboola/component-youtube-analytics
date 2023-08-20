@@ -194,31 +194,5 @@ class Client:
             downloader = MediaIoBaseDownload(out_file, request, chunksize=8192)
             download_finished = False
             while download_finished is False:
-                _, download_finished = downloader.next_chunk()
+                _, download_finished = downloader.next_chunk(num_retries=4)
             pass
-
-# if __name__ == '__main__':
-#     import os
-#
-#     ACCESS_TOKEN_EXAMPLE = os.environ['ACCESS_TOKEN_EXAMPLE']
-#     REFRESH_TOKEN_EXAMPLE = os.environ['REFRESH_TOKEN_EXAMPLE']
-#     CLIENT_ID_EXAMPLE = os.environ['CLIENT_ID_EXAMPLE']
-#     CLIENT_SECRET_EXAMPLE = os.environ['CLIENT_SECRET_EXAMPLE']
-#
-#     token_data_example = {
-#         'expires_at': 22222,
-#         'access_token': 'neverusedcanbeanything',
-#         'refresh_token': REFRESH_TOKEN_EXAMPLE,
-#         'token_type': 'Bearer'
-#     }
-
-    # client = Client(client_id=CLIENT_ID_EXAMPLE,
-    #                 app_secret=CLIENT_SECRET_EXAMPLE,
-    #                 token_data=token_data_example)
-    # client = Client(access_token=ACCESS_TOKEN_EXAMPLE)
-
-    # result = client.list_report_types(include_system_managed=False)
-    # print(f'Number of report types: {len(result)}')
-    # for item in result:
-    #     # print(item['id'], item['name'])
-    #     print(item)
