@@ -70,11 +70,32 @@
           "playlist_device_os_a1",
           "playlist_playback_location_a1",
           "playlist_province_a1",
-          "playlist_traffic_source_a1"
-        ]
-      },
-      "options": {
-       "enum_titles": [
+          "playlist_traffic_source_a1",
+          "content_owner_basic_a3",
+          "content_owner_province_a2",
+          "content_owner_playback_location_a2",
+          "content_owner_traffic_source_a2",
+          "content_owner_device_os_a2",
+          "content_owner_demographics_a1",
+          "content_owner_sharing_service_a1",
+          "content_owner_annotations_a1",
+          "content_owner_cards_a1",
+          "content_owner_end_screens_a1",
+          "content_owner_subtitles_a2",
+          "content_owner_combined_a2",
+          "content_owner_playlist_basic_a1",
+          "content_owner_playlist_province_a1",
+          "content_owner_playlist_playback_location_a1",
+          "content_owner_playlist_traffic_source_a1",
+          "content_owner_playlist_device_os_a1",
+          "content_owner_playlist_combined_a1",
+          "content_owner_ad_rates_a1",
+          "content_owner_estimated_revenue_a1",
+          "content_owner_asset_estimated_revenue_a1",
+          "content_owner_asset_basic_a2"
+        ],
+        "options": {
+          "enum_titles": [
             "Annotations",
             "User activity",
             "Cards",
@@ -92,17 +113,32 @@
             "Playlist device and OS",
             "Playlist playback locations",
             "Playlist province",
-            "Playlist traffic sources"
+            "Playlist traffic sources",
+            "User activity (content_owner_basic_a3)",
+            "User activity by province (content_owner_province_a2)",
+            "Playback locations",
+            "Traffic sources",
+            "Device type and operating system",
+            "Viewer demographics",
+            "Content sharing by platform",
+            "Annotations",
+            "Cards",
+            "End screens",
+            "Subtitles",
+            "Combined (content_owner_combined_a2)",
+            "User activity (content_owner_playlist_basic_a1)",
+            "User activity by province (content_owner_playlist_province_a1)",
+            "Playback locations",
+            "Traffic sources",
+            "Device type and operating system",
+            "Combined (content_owner_playlist_combined_a1)",
+            "Ad rate reports",
+            "Estimated video revenue",
+            "Estimated asset revenue",
+            "User activity (content_owner_asset_basic_a2)"
           ]
+        }
       }
-    },
-    "debug": {
-      "type": "boolean",
-      "propertyOrder": 700,
-      "title": "Debug",
-      "hidden": true,
-      "description": "When checked, logging will be more verbose",
-      "format": "checkbox"
     }
   }
 }
