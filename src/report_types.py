@@ -10,6 +10,13 @@ Information on dimensions and metrics for individual report type IDs was retriev
 """
 
 report_types = {
+    'channel_annotations_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'live_or_on_demand', 'subscribed_status', 'country_code',
+                       'annotation_type', 'annotation_id'],
+        'metrics': ['annotation_click_through_rate', 'annotation_close_rate', 'annotation_impressions',
+                    'annotation_clickable_impressions', 'annotation_closable_impressions', 'annotation_clicks',
+                    'annotation_closes']
+    },
     'channel_basic_a2': {
         'dimensions': ['date', 'channel_id', 'video_id', 'live_or_on_demand', 'subscribed_status', 'country_code'],
         'metrics': ['views', 'comments', 'likes', 'dislikes', 'videos_added_to_playlists',
