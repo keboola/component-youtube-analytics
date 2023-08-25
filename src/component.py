@@ -201,7 +201,7 @@ class Component(ComponentBase):
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
                 filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
-                self.write_report(filename_raw, report['downloadUrl'])
+                self.download_report_to_file(downloadUrl=report['downloadUrl'], target_filename=filename_raw)
                 if not table_def.columns:
                     columns = self._read_columns(filename_raw)
                     table_def.columns = columns
@@ -218,6 +218,11 @@ class Component(ComponentBase):
 
     @staticmethod
     def _strip_header(filename_raw, filename_tgt):
+        """Copy csv file to destination without header line
+        Args:
+            filename_raw: Original csv file containing header line
+            filename_tgt: Destination csv file without header line
+        """
         with open(filename_raw, mode='rt') as src, open(filename_tgt, mode='wt') as tgt:
             src.readline()
             while True:
@@ -228,10 +233,14 @@ class Component(ComponentBase):
         pass
 
     @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24)
-    def write_report(self, filename, downloadUrl):
+    def download_report_to_file(self, downloadUrl: str, target_filename: str, ):
         """Download a report from media URL to target CSV file
+
+        Args:
+            downloadUrl: URL providing report data
+            target_filename: Local file where to write the data
         """
-        self.client.read_report_file(filename, downloadUrl)
+        self.client.download_report_file(downloadUrl=downloadUrl, filename=target_filename, )
 
     # Eventually we opted not to read report type ids dynamically.
     # Instead, we just use fixed set of types as retrieved from the API documentation.

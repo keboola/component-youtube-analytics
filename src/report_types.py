@@ -270,5 +270,71 @@ report_types = {
                     'annotation_clicks', 'annotation_closes', 'card_click_rate', 'card_teaser_click_rate',
                     'card_impressions', 'card_teaser_impressions', 'card_clicks', 'card_teaser_clicks', 'red_views',
                     'red_watch_time_minutes']
+    },
+    'content_owner_asset_province_a2': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'province_code'],
+        'metrics': ['	views', 'watch_time_minutes', 'average_view_duration_seconds',
+                    'average_view_duration_percentage', 'annotation_click_through_rate', 'annotation_close_rate',
+                    'annotation_impressions', 'annotation_clickable_impressions', 'annotation_closable_impressions',
+                    'annotation_clicks', 'annotation_closes', 'card_click_rate', 'card_teaser_click_rate',
+                    'card_impressions', 'card_teaser_impressions', 'card_clicks', 'card_teaser_clicks', 'red_views',
+                    'red_watch_time_minutes']
+    },
+    'content_owner_asset_playback_location_a2': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'playback_location_type',
+                       'playback_location_detail'],
+        'metrics': ['views', 'watch_time_minutes', 'average_view_duration_seconds', 'average_view_duration_percentage',
+                    'red_views', 'red_watch_time_minutes']
+    },
+    'content_owner_asset_traffic_source_a2': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'traffic_source_type',
+                       'traffic_source_detail'],
+        'metrics': ['views', 'watch_time_minutes', 'average_view_duration_seconds', 'average_view_duration_percentage',
+                    'red_views', 'red_watch_time_minutes']
+    },
+    'content_owner_asset_device_os_a2': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'device_type', 'operating_system'],
+        'metrics': ['views', 'watch_time_minutes', 'average_view_duration_seconds', 'average_view_duration_percentage',
+                    'red_views', 'red_watch_time_minutes']
+    },
+    'content_owner_asset_demographics_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'age_group', 'gender'],
+        'metrics': ['views_percentage']
+    },
+    'content_owner_asset_sharing_service_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'sharing_service'],
+        'metrics': ['shares']
+    },
+    'content_owner_asset_annotations_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'annotation_type', 'annotation_title'],
+        'metrics': ['annotation_click_through_rate', 'annotation_close_rate', 'annotation_impressions',
+                    'annotation_clickable_impressions', 'annotation_closable_impressions', 'annotation_clicks',
+                    'annotation_closes']
+    },
+    'content_owner_asset_cards_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'card_type', 'card_id'],
+        'metrics': ['card_click_rate', 'card_teaser_click_rate', 'card_impressions', 'card_teaser_impressions',
+                    'card_clicks', 'card_teaser_clicks']
+    },
+    'content_owner_asset_end_screens_a1': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'end_screen_element_type',
+                       'end_screen_element_id'],
+        'metrics': ['end_screen_element_clicks', 'end_screen_element_impressions', 'end_screen_element_click_rate']
+    },
+    'content_owner_asset_combined_a2': {
+        'dimensions': ['date', 'channel_id', 'video_id', 'asset_id', 'claimed_status', 'uploader_type',
+                       'live_or_on_demand', 'subscribed_status', 'country_code', 'playback_location_type',
+                       'traffic_source_type', 'device_type', 'operating_system'],
+        'metrics': ['views', 'watch_time_minutes', 'average_view_duration_seconds', 'average_view_duration_percentage',
+                    'red_views', 'red_watch_time_minutes']
     }
 }

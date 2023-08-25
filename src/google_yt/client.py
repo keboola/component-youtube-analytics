@@ -76,8 +76,6 @@ class Client:
             HttpError 400 - Bad Request - missing name or missing or non-existing report_type_id, or depricated
                 403 - Forbidden - attempt to create system managed report
                 409 - Conflict - resource already exists
-
-
         """
         body = {
             'name': name,
@@ -86,8 +84,14 @@ class Client:
         kwargs = dict()
         if on_behalf_of_owner:
             kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
-        results = self.service.jobs().create(body=body, **kwargs).execute()
-        return results
+        try:
+            results = self.service.jobs().create(body=body, **kwargs).execute()
+            return results
+        except HttpError as error:
+            raise UnicodeError(f'Creating job {name} for {report_type_id} - HttpError {error.status_code}: '
+                               f'{error.reason}')
+        except Exception:
+            raise
 
     def delete_job(self, job_id: str, on_behalf_of_owner=''):
         """Delete existing job
@@ -182,10 +186,14 @@ class Client:
 
         return reports
 
-    def read_report_file(self, filename: str, downloadUrl: str):
+    def download_report_file(self, downloadUrl: str, filename: str):
         """Download generated report (specified by media URL) into a local file.
 
         GCP library provides dedicated method to download a stream of data into a local file.
+
+        Args:
+            downloadUrl: URL providing report data
+            filename: Target file where to write the data
         """
         request = self.service.media().download_media(resourceName='')
         request.uri = downloadUrl
