@@ -120,8 +120,10 @@ class Component(ComponentBase):
                 self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'],
                                        context_description=context_description)
 
+        context_description = 'listing all jobs' + \
+                              (f' for owner {self.conf.content_owner}' if self.conf.content_owner else '')
         all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner,
-                                         context_description='listing all jobs')
+                                         context_description=context_description)
 
         new_state = {
             "onBehalfOfContentOwner": self.conf.content_owner,

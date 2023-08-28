@@ -5,6 +5,7 @@ from googleapiclient.errors import HttpError
 from google.oauth2.credentials import Credentials
 from keboola.component.exceptions import UserException
 import io
+from functools import wraps
 
 SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
 API_SERVICE_NAME = 'youtubereporting'
@@ -45,17 +46,19 @@ class Client:
         Raises:
             Exception: HttpError will be converted to UserException using context_description parameter
         """
-        def wrapper(*args, **kwargs):
+
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
             context_description = kwargs.get('context_description') if 'context_description' in kwargs else ''
             try:
-                result = func(*args, **kwargs)
+                result = func(self, *args, **kwargs)
                 return result
             except HttpError as error:
                 raise UserException(f'{context_description} - Http error {error.status_code}: {error.reason}')
             except Exception:
                 raise
 
-        return wrapper()
+        return wrapper
 
     @handle_http_error
     def list_report_types(self, on_behalf_of_owner='', include_system_managed=False, context_description=''):
@@ -170,8 +173,8 @@ class Client:
         if include_system_managed:
             kwargs['includeSystemManaged'] = include_system_managed
 
-            results = self.service.jobs().list(**kwargs).execute()
-            return results.get('jobs')
+        results = self.service.jobs().list(**kwargs).execute()
+        return results.get('jobs')
 
     @handle_http_error
     def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = '',
