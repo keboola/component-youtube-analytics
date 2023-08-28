@@ -116,9 +116,12 @@ class Component(ComponentBase):
             if job.get('created') and \
                     (self.conf.content_owner is not previous_state['onBehalfOfContentOwner']
                      or key not in self.conf.report_types):
-                self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'])
+                context_description = f'Deleting job for {key}'
+                self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'],
+                                       context_description=context_description)
 
-        all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner)
+        all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner,
+                                         context_description='listing all jobs')
 
         new_state = {
             "onBehalfOfContentOwner": self.conf.content_owner,
@@ -131,9 +134,11 @@ class Component(ComponentBase):
             job_created = False
             job = next(filter(lambda x: x['reportTypeId'] == report_type_id, all_jobs), None)
             if not job:
+                context_description = f'Creating job for {report_type_id}'
                 job = self.client.create_job(f'keboola_{report_type_id}',
                                              report_type_id=report_type_id,
-                                             on_behalf_of_owner=self.conf.content_owner)
+                                             on_behalf_of_owner=self.conf.content_owner,
+                                             context_description=context_description)
                 job_created = True
             job_from_state = previous_state['jobs'].get(report_type_id)
             if job_from_state and job_from_state['id'] == job['id']:
@@ -170,7 +175,9 @@ class Component(ComponentBase):
         # Retrie reports that were not processed yet (if no state info available then request all)
         logging.debug(f'Processing job: {job.get("reportTypeId")}')
         last_report_create_time = job.get('lastReportCreateTime')
-        reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time)
+        context_description = f'Listing reports after {last_report_create_time}'
+        reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time,
+                                           context_description=context_description)
         if not reports:
             return
 
@@ -233,14 +240,16 @@ class Component(ComponentBase):
         pass
 
     @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24)
-    def download_report_to_file(self, downloadUrl: str, target_filename: str, ):
+    def download_report_to_file(self, downloadUrl: str, target_filename: str):
         """Download a report from media URL to target CSV file
 
         Args:
             downloadUrl: URL providing report data
             target_filename: Local file where to write the data
         """
-        self.client.download_report_file(downloadUrl=downloadUrl, filename=target_filename, )
+        context_description = f'Downloading report to file {target_filename}'
+        self.client.download_report_file(downloadUrl=downloadUrl, filename=target_filename,
+                                         context_description=context_description)
 
     # Eventually we opted not to read report type ids dynamically.
     # Instead, we just use fixed set of types as retrieved from the API documentation.

@@ -3,6 +3,7 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 from google.oauth2.credentials import Credentials
+from keboola.component.exceptions import UserException
 import io
 
 SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
@@ -34,11 +35,38 @@ class Client:
                              credentials=credentials)
         pass
 
-    def list_report_types(self, on_behalf_of_owner='', include_system_managed=False):
+    @staticmethod
+    def handle_http_error(func):
+        """Handle Http communication errors in a uniform manner
+
+        It is used as a decorator. If the decorated function is called with context_description named parameter
+        its contents will be used in UserException message.
+
+        Raises:
+            Exception: HttpError will be converted to UserException using context_description parameter
+        """
+        def wrapper(*args, **kwargs):
+            context_description = kwargs.get('context_description') if 'context_description' in kwargs else ''
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except HttpError as error:
+                raise UserException(f'{context_description} - Http error {error.status_code}: {error.reason}')
+            except Exception:
+                raise
+
+        return wrapper()
+
+    @handle_http_error
+    def list_report_types(self, on_behalf_of_owner='', include_system_managed=False, context_description=''):
         """Returns a list of report types that the channel or content owner can retrieve
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/reportTypes/list
 
+        Args:
+            on_behalf_of_owner: explicit content owner
+            include_system_managed: flag to include system managed types - we never use it actually
+            context_description: text that will be used in handle_http_error decorator
         """
         kwargs = dict()
         if on_behalf_of_owner:
@@ -48,7 +76,8 @@ class Client:
         results = self.service.reportTypes().list(**kwargs).execute()
         return results.get('reportTypes')
 
-    def create_job(self, name: str, report_type_id: str, on_behalf_of_owner=''):
+    @handle_http_error
+    def create_job(self, name: str, report_type_id: str, on_behalf_of_owner='', context_description=''):
         """Create a job for specific report type.
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/create
@@ -59,7 +88,8 @@ class Client:
         Args:
             name: Name of the job (maximum 100 characters)
             report_type_id: ID of a report type as listed by list_report_types(...)
-            on_behalf_of_owner: If specified then specific channel owner reports will be listed.
+            on_behalf_of_owner: If specified then specific channel owner reports will be listed
+            context_description: text that will be used in handle_http_error decorator
 
         Returns:
             Job resource. Example
@@ -84,34 +114,34 @@ class Client:
         kwargs = dict()
         if on_behalf_of_owner:
             kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
-        try:
-            results = self.service.jobs().create(body=body, **kwargs).execute()
-            return results
-        except HttpError as error:
-            raise UnicodeError(f'Creating job {name} for {report_type_id} - HttpError {error.status_code}: '
-                               f'{error.reason}')
-        except Exception:
-            raise
 
-    def delete_job(self, job_id: str, on_behalf_of_owner=''):
+        results = self.service.jobs().create(body=body, **kwargs).execute()
+        return results
+
+    @handle_http_error
+    def delete_job(self, job_id: str, on_behalf_of_owner='', context_description=''):
         """Delete existing job
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/delete
 
+        Args:
+            job_id: ID of a job to delete
+            on_behalf_of_owner: If specified then specific channel owner reports will be listed
+            context_description: text that will be used in handle_http_error decorator
         """
-        # TODO: complete method documentation
         kwargs = {}
         if on_behalf_of_owner:
             kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
         try:
-            results = self.service.jobs().delete(jobId=job_id, **kwargs).execute()
+            self.service.jobs().delete(jobId=job_id, **kwargs).execute()
         except HttpError as ex:
             # we allow for non-existent job, other errors will be propagated
             if ex.status_code != 404:
-                raise ex
-        return results
+                raise
+        return
 
-    def list_jobs(self, on_behalf_of_owner: str = '', include_system_managed=False):
+    @handle_http_error
+    def list_jobs(self, on_behalf_of_owner: str = '', include_system_managed=False, context_description=''):
         """List jobs
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/list
@@ -120,6 +150,7 @@ class Client:
             on_behalf_of_owner: If specified then specific channel owner reports will be listed.
                 If not specified then current user channel reports will be listed.
             include_system_managed: If specified and True then system managed jobs will be listed.
+            context_description: text that will be used in handle_http_error decorator
 
         Returns:
             A list of retrieved jobs. Example:
@@ -139,10 +170,12 @@ class Client:
         if include_system_managed:
             kwargs['includeSystemManaged'] = include_system_managed
 
-        results = self.service.jobs().list(**kwargs).execute()
-        return results.get('jobs')
+            results = self.service.jobs().list(**kwargs).execute()
+            return results.get('jobs')
 
-    def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = ''):
+    @handle_http_error
+    def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = '',
+                     context_description=''):
         """List reports associated with specified job
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs.reports/list
@@ -153,6 +186,7 @@ class Client:
                 If not specified then current user channel reports will be listed.
             created_after: Filter only reports newer than specified date.
                 It is the best practice to specify value of createTime of latest retrieved report.
+            context_description: text that will be used in handle_http_error decorator
 
         Returns:
             A list of retrieved reports. Example:
@@ -186,7 +220,8 @@ class Client:
 
         return reports
 
-    def download_report_file(self, downloadUrl: str, filename: str):
+    @handle_http_error
+    def download_report_file(self, downloadUrl: str, filename: str, context_description=''):
         """Download generated report (specified by media URL) into a local file.
 
         GCP library provides dedicated method to download a stream of data into a local file.
@@ -194,6 +229,7 @@ class Client:
         Args:
             downloadUrl: URL providing report data
             filename: Target file where to write the data
+            context_description: text that will be used in handle_http_error decorator
         """
         request = self.service.media().download_media(resourceName='')
         request.uri = downloadUrl
