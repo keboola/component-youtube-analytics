@@ -194,7 +194,7 @@ class Component(ComponentBase):
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
                 filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
-                self.download_report_to_file(downloadUrl=report['downloadUrl'], target_filename=filename_raw)
+                self.download_report_to_file(downloadUrl=report['download_url'], target_filename=filename_raw)
                 if not table_def.columns:
                     columns = self._read_columns(filename_raw)
                     table_def.columns = columns
@@ -235,7 +235,7 @@ class Component(ComponentBase):
         """
         context_description = f'Downloading report to file {target_filename}'
         logging.info(context_description)
-        self.client.download_report_file(downloadUrl=downloadUrl, filename=target_filename,
+        self.client.download_report_file(download_url=downloadUrl, filename=target_filename,
                                          context_description=context_description)
 
     # Eventually we opted not to read report type ids dynamically.

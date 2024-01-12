@@ -1,7 +1,7 @@
 # YouTube Analytics Extractor
 
-This data source component is using YouTube Reporting API to create and run reports that measure results of YouTube
-advertising campaigns. Automate data retrieval from
+This data source component is using YouTube Reporting API to create and run reports that give you insights into the performance of your YouTube
+content. Automate data retrieval from
 the [YouTube Analytics](https://developers.google.com/youtube/analytics/) reports.
 
 ## Prerequisites

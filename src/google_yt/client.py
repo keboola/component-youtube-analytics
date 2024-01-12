@@ -202,7 +202,7 @@ class Client:
                 'startTime': '2023-07-29T07:00:00Z',
                 'endTime': '2023-07-30T07:00:00Z',
                 'createTime': '2023-07-31T04:47:02.012627Z',
-                'downloadUrl': 'https://youtubereporting.googleapis.com/.../jobs/7a2...6eb/reports/86...65?alt=media'
+                'download_url': 'https://youtubereporting.googleapis.com/.../jobs/7a2...6eb/reports/86...65?alt=media'
                },
                ...
             ]
@@ -226,22 +226,22 @@ class Client:
         return reports
 
     @handle_http_error
-    def download_report_file(self, downloadUrl: str, filename: str, context_description=''):
+    def download_report_file(self, download_url: str, filename: str, context_description=''):
         """Download generated report (specified by media URL) into a local file.
 
         GCP library provides dedicated method to download a stream of data into a local file.
 
         Args:
-            downloadUrl: URL providing report data
+            download_url: URL providing report data
             filename: Target file where to write the data
             context_description: text that will be used in handle_http_error decorator
         """
         request = self.service.media().download_media(resourceName='')
-        request.uri = downloadUrl
+        request.uri = download_url
 
         with io.FileIO(filename, mode='wb') as out_file:
             downloader = MediaIoBaseDownload(out_file, request)
             download_finished = False
             while download_finished is False:
-                _, download_finished = downloader.next_chunk(num_retries=15)
+                _, download_finished = downloader.next_chunk(num_retries=60)
             pass
