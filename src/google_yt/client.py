@@ -25,11 +25,12 @@ class Client:
                 "web": {
                     "client_id": client_id,
                     "client_secret": app_secret,
-                    "redirect_uris": ["https://www.example.com/oauth2callback"],
                     "auth_uri": "https://oauth2.googleapis.com/auth",
                     "token_uri": "https://oauth2.googleapis.com/token"
                 }
             }
+            # make sure the token is expired explicitly to force refresh
+            token_data['expires_at'] = 0
             credentials = Flow.from_client_config(client_secrets, scopes=SCOPES, token=token_data).credentials
         self.service = build(serviceName=API_SERVICE_NAME,
                              version=API_VERSION,
@@ -174,7 +175,7 @@ class Client:
             kwargs['includeSystemManaged'] = include_system_managed
 
         results = self.service.jobs().list(**kwargs).execute()
-        return results.get('jobs')
+        return results.get('jobs', [])
 
     @handle_http_error
     def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = '',

@@ -6,13 +6,6 @@
     "report_types"
   ],
   "properties": {
-    "#api_token": {
-      "type": "string",
-      "title": "API token",
-      "description": "Just a temporary solution prior to having OAuth authorization ready",
-      "format": "password",
-      "propertyOrder": 10
-    },
     "input_variant": {
       "type": "string",
       "title": "Content owner specification",
@@ -45,7 +38,7 @@
     "report_types": {
       "type": "array",
       "title": "Report types",
-      "propertyOrder": 200,
+      "propertyOrder": 250,
       "minLength": 1,
       "description": "Enter ID of selected content owner.",
       "format": "select",
