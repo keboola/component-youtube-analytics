@@ -1,4 +1,4 @@
-Use YouTube Reporting API to gain insights into the performance of your YouTube
+Use this connector to gain insights into the performance of your YouTube
 content. Get detailed statistics and reports about various aspects of a YouTube channel, including:
 
 1. **View Counts:** Information about the number of views your videos receive.

@@ -1,1 +1,1 @@
-A leading online video platform where users can upload, share, and watch videos. Discover a vast range of content, from music and tutorials to vlogs and more. Engage with creators, subscribe to favorite channels, and enjoy personalized recommendations.
+A leading online video platform where users can upload, share, and watch videos.
