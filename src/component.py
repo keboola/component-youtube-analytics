@@ -194,6 +194,10 @@ class Component(ComponentBase):
             if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
                 filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
                 filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
+                if not report.get('download_url'):
+                    logging.error(f"Report {report} is not ready yet, skipping")
+                    continue
+
                 self.download_report_to_file(downloadUrl=report['download_url'], target_filename=filename_raw)
                 if not table_def.columns:
                     columns = self._read_columns(filename_raw)
