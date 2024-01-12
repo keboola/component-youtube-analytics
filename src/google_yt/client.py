@@ -1,11 +1,12 @@
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.http import MediaIoBaseDownload
-from googleapiclient.errors import HttpError
-from google.oauth2.credentials import Credentials
-from keboola.component.exceptions import UserException
 import io
 from functools import wraps
+
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
+from keboola.component.exceptions import UserException
 
 SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
 API_SERVICE_NAME = 'youtubereporting'
@@ -239,8 +240,8 @@ class Client:
         request.uri = downloadUrl
 
         with io.FileIO(filename, mode='wb') as out_file:
-            downloader = MediaIoBaseDownload(out_file, request, chunksize=8192)
+            downloader = MediaIoBaseDownload(out_file, request)
             download_finished = False
             while download_finished is False:
-                _, download_finished = downloader.next_chunk(num_retries=4)
+                _, download_finished = downloader.next_chunk(num_retries=15)
             pass

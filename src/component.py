@@ -34,6 +34,7 @@ class Component(ComponentBase):
         super().__init__()
         self.conf = None
         self.client_yt = None
+        logging.getLogger('googleapiclient.http').setLevel(logging.ERROR)
 
     def run(self):
         """Main execution code
@@ -233,6 +234,7 @@ class Component(ComponentBase):
             target_filename: Local file where to write the data
         """
         context_description = f'Downloading report to file {target_filename}'
+        logging.info(context_description)
         self.client.download_report_file(downloadUrl=downloadUrl, filename=target_filename,
                                          context_description=context_description)
 
