@@ -12,7 +12,7 @@ from googleapiclient.errors import HttpError
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 
-from configuration import Configuration, InputVariantEnum
+from configuration import Configuration
 from google_yt.client import Client
 from report_types import report_types
 
@@ -66,17 +66,17 @@ class Component(ComponentBase):
         """
 
         # 1) Initialize Configuration
-        self.conf = Configuration.fromDict(parameters=self.configuration.parameters)
+        self.conf: Configuration = Configuration.fromDict(parameters=self.configuration.parameters)
 
         # Check configuration validity - report problem early
         if not self.conf.report_types:
             raise UserException('Configuration has no report types specified')
-        if self.conf.input_variant == InputVariantEnum.use_selected_owner and not self.conf.content_owner:
+        if self.conf.on_behalf_of_content_owner and not self.conf.content_owner_id:
             raise UserException('Configuration assumes explicit content owner but none is specified')
 
         # Normalize configuration
-        if self.conf.input_variant is not InputVariantEnum.use_selected_owner:
-            self.conf.content_owner = ''
+        if not self.conf.on_behalf_of_content_owner:
+            self.conf.content_owner_id = ''
 
         # 2) Retrieve state - get last state data/in/state.json from previous run
         previous_state = self.get_state_file()
@@ -91,19 +91,19 @@ class Component(ComponentBase):
         # 3) Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state['jobs'].items():
             if job.get('created') and \
-                    (self.conf.content_owner is not previous_state['onBehalfOfContentOwner']
+                    (self.conf.content_owner_id is not previous_state['onBehalfOfContentOwner']
                      or key not in self.conf.report_types):
                 context_description = f'Deleting job for {key}'
                 self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'],
                                        context_description=context_description)
 
         context_description = 'listing all jobs' + \
-                              (f' for owner {self.conf.content_owner}' if self.conf.content_owner else '')
-        all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner,
+                              (f' for owner {self.conf.content_owner_id}' if self.conf.content_owner_id else '')
+        all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner_id,
                                          context_description=context_description)
 
         new_state = {
-            "onBehalfOfContentOwner": self.conf.content_owner,
+            "onBehalfOfContentOwner": self.conf.content_owner_id,
             "jobs": dict()
         }
 
@@ -118,7 +118,7 @@ class Component(ComponentBase):
                 context_description = f'Creating job for {report_type_id}'
                 job = self.client.create_job(new_job_name,
                                              report_type_id=report_type_id,
-                                             on_behalf_of_owner=self.conf.content_owner,
+                                             on_behalf_of_owner=self.conf.content_owner_id,
                                              context_description=context_description)
                 job_created = True
             job_from_state = previous_state['jobs'].get(report_type_id)

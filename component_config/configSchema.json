@@ -6,32 +6,23 @@
     "report_types"
   ],
   "properties": {
-    "input_variant": {
-      "type": "string",
-      "title": "Content owner specification",
+    "on_behalf_of_content_owner": {
+      "type": "boolean",
+      "title": "Use Content Owner ID",
+      "format": "checkbox",
       "propertyOrder": 100,
-      "description": "You may choose to generate reports for login user (default) or for selected content owner",
-      "enum": [
-        "use_login_owner",
-        "use_selected_owner"
-      ],
-      "options": {
-        "enum_titles": [
-          "Login user is also the content owner",
-          "Selected content owner"
-        ]
-      },
-      "default": "use_login_owner"
+      "description": "Youtube partners managing multiple accounts may run reports on behalf of different content owners.",
+      "default": false
     },
-    "content_owner": {
+    "content_owner_id": {
       "type": "string",
       "title": "Content owner",
       "propertyOrder": 200,
       "minLength": 1,
-      "description": "Enter ID of selected content owner.",
+      "description": "Enter the ID of content owner.",
       "options": {
         "dependencies": {
-          "input_variant": "use_selected_owner"
+          "on_behalf_of_content_owner": true
         }
       }
     },
@@ -89,46 +80,46 @@
         ],
         "options": {
           "enum_titles": [
-            "Annotations",
-            "User activity",
-            "Cards",
-            "Combined",
-            "Demographics",
-            "Device and OS",
-            "End screens",
-            "Playback locations",
-            "Province",
-            "Sharing service",
-            "Subtitles",
-            "Traffic sources",
+            "Channel Annotations",
+            "Channel User activity",
+            "Channel Cards",
+            "Channel Combined",
+            "Channel Demographics",
+            "Channel Device and OS",
+            "Channel End screens",
+            "Channel Playback locations",
+            "Channel Province",
+            "Channel Sharing service",
+            "Channel Subtitles",
+            "Channel Traffic sources",
             "Playlist user activity",
             "Playlist combined",
             "Playlist device and OS",
             "Playlist playback locations",
             "Playlist province",
             "Playlist traffic sources",
-            "User activity (content_owner_basic_a3)",
-            "User activity by province (content_owner_province_a2)",
-            "Playback locations",
-            "Traffic sources",
-            "Device type and operating system",
-            "Viewer demographics",
-            "Content sharing by platform",
-            "Annotations",
-            "Cards",
-            "End screens",
-            "Subtitles",
-            "Combined (content_owner_combined_a2)",
-            "User activity (content_owner_playlist_basic_a1)",
-            "User activity by province (content_owner_playlist_province_a1)",
-            "Playback locations",
-            "Traffic sources",
-            "Device type and operating system",
-            "Combined (content_owner_playlist_combined_a1)",
-            "Ad rate reports",
-            "Estimated video revenue",
-            "Estimated asset revenue",
-            "User activity (content_owner_asset_basic_a2)"
+            "Content Owner User activity (content_owner_basic_a3)",
+            "Content Owner User activity by province (content_owner_province_a2)",
+            "Content Owner Playback locations",
+            "Content Owner Traffic sources",
+            "Content Owner Device type and operating system",
+            "Content Owner Viewer demographics",
+            "Content Owner Content sharing by platform",
+            "Content Owner Annotations",
+            "Content Owner Cards",
+            "Content Owner End screens",
+            "Content Owner Subtitles",
+            "Content Owner Combined (content_owner_combined_a2)",
+            "Content Owner User activity (content_owner_playlist_basic_a1)",
+            "Content Owner User activity by province (content_owner_playlist_province_a1)",
+            "Content Owner Playback locations",
+            "Content Owner Traffic sources",
+            "Content Owner Device type and operating system",
+            "Content Owner Combined (content_owner_playlist_combined_a1)",
+            "Content Owner Ad rate reports",
+            "Content Owner Estimated video revenue",
+            "Content Owner Estimated asset revenue",
+            "Content Owner User activity (content_owner_asset_basic_a2)"
           ]
         }
       }
