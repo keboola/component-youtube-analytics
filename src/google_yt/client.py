@@ -1,11 +1,12 @@
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.http import MediaIoBaseDownload
-from googleapiclient.errors import HttpError
-from google.oauth2.credentials import Credentials
-from keboola.component.exceptions import UserException
 import io
 from functools import wraps
+
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
+from keboola.component.exceptions import UserException
 
 SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
 API_SERVICE_NAME = 'youtubereporting'
@@ -201,7 +202,7 @@ class Client:
                 'startTime': '2023-07-29T07:00:00Z',
                 'endTime': '2023-07-30T07:00:00Z',
                 'createTime': '2023-07-31T04:47:02.012627Z',
-                'downloadUrl': 'https://youtubereporting.googleapis.com/.../jobs/7a2...6eb/reports/86...65?alt=media'
+                'download_url': 'https://youtubereporting.googleapis.com/.../jobs/7a2...6eb/reports/86...65?alt=media'
                },
                ...
             ]
@@ -225,22 +226,22 @@ class Client:
         return reports
 
     @handle_http_error
-    def download_report_file(self, downloadUrl: str, filename: str, context_description=''):
+    def download_report_file(self, download_url: str, filename: str, context_description=''):
         """Download generated report (specified by media URL) into a local file.
 
         GCP library provides dedicated method to download a stream of data into a local file.
 
         Args:
-            downloadUrl: URL providing report data
+            download_url: URL providing report data
             filename: Target file where to write the data
             context_description: text that will be used in handle_http_error decorator
         """
         request = self.service.media().download_media(resourceName='')
-        request.uri = downloadUrl
+        request.uri = download_url
 
         with io.FileIO(filename, mode='wb') as out_file:
-            downloader = MediaIoBaseDownload(out_file, request, chunksize=8192)
+            downloader = MediaIoBaseDownload(out_file, request)
             download_finished = False
             while download_finished is False:
-                _, download_finished = downloader.next_chunk(num_retries=4)
+                _, download_finished = downloader.next_chunk(num_retries=60)
             pass
