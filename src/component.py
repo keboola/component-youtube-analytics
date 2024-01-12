@@ -2,17 +2,19 @@
 Component is a main class implementing specific YouTube reporting extractor.
 
 """
+import csv
 import logging
 import os
-import csv
+from functools import cached_property
 
+import backoff
+from googleapiclient.errors import HttpError
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
+
 from configuration import Configuration, InputVariantEnum
 from google_yt.client import Client
 from report_types import report_types
-from googleapiclient.errors import HttpError
-import backoff
 
 
 class Component(ComponentBase):
@@ -32,32 +34,6 @@ class Component(ComponentBase):
         super().__init__()
         self.conf = None
         self.client_yt = None
-
-    @property
-    def client(self) -> Client:
-        """Retrieve google client for communication to the YT reporting service.
-
-        If this is the first access to a client, application tries to create it. There are two options available:
-        1) Create a client just by supplying an access token found in parameters as '#api_token'.
-            It is used just during development when OAuth2 was not yet provided.
-        2) Create a client using OAuth credentials from component configuration.
-            This option ignores 'access_token'. It always creates a new token from a 'refresh_token'
-        """
-        if not self.client_yt:
-            user = passwd = ''
-            token_data = None
-            api_token = self.configuration.parameters.get('#api_token')
-            if not api_token:
-                user = self.configuration.oauth_credentials.appKey
-                passwd = self.configuration.oauth_credentials.appSecret
-                token_data = {
-                    'expires_at': 22222,
-                    'access_token': 'neverusedcanbeanything',
-                    'refresh_token': self.configuration.oauth_credentials.data.get('refresh_token'),
-                    'token_type': 'Bearer'
-                }
-            self.client_yt = Client(access_token=api_token, client_id=user, app_secret=passwd, token_data=token_data)
-        return self.client_yt
 
     def run(self):
         """Main execution code
@@ -136,8 +112,10 @@ class Component(ComponentBase):
             job_created = False
             job = next(filter(lambda x: x['reportTypeId'] == report_type_id, all_jobs), None)
             if not job:
+                new_job_name = f'keboola_{report_type_id}'
+                logging.warning(f"No existing job found, creating new one named: {new_job_name}")
                 context_description = f'Creating job for {report_type_id}'
-                job = self.client.create_job(f'keboola_{report_type_id}',
+                job = self.client.create_job(new_job_name,
                                              report_type_id=report_type_id,
                                              on_behalf_of_owner=self.conf.content_owner,
                                              context_description=context_description)
@@ -175,15 +153,18 @@ class Component(ComponentBase):
         """
 
         # Retrie reports that were not processed yet (if no state info available then request all)
-        logging.debug(f'Processing job: {job.get("reportTypeId")}')
+        logging.info(f'Processing job for report: {job.get("reportTypeId")}')
         last_report_create_time = job.get('lastReportCreateTime')
         context_description = f'Listing reports after {last_report_create_time}'
         reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time,
                                            context_description=context_description)
         if not reports:
+            logging.warning(
+                "No new reports were found, the jobs weren't created yet or there are no new reports. "
+                "It may take up to 24 hours for a brand new job to generate reports.")
             return
 
-        logging.debug(f'   Number of reports to be processed: {len(reports)}')
+        logging.info(f'{len(reports)} new reports found!')
 
         # Prepare output table description (manifest)
         # Note: We specify keys here but update columns information only after reports were downloaded
@@ -202,8 +183,10 @@ class Component(ComponentBase):
         reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
         # By updating job object here we actually update an item in new state
         job['lastReportCreateTime'] = reports[0]['createTime']
+
         # Sort list of reports based on data period (startTime) and then on creation time (createTime).
         reports = sorted(reports, key=lambda d: d['startTime'] + d['createTime'])
+
         for index in range(len(reports)):
             report = reports[index]
             # Consider only the last report among a set of reports for specific date period
@@ -260,6 +243,27 @@ class Component(ComponentBase):
     #     report_type_ids = self.client.list_report_types()
     #     results = [SelectElement(value=tid['id'], label=f"{tid['name']} ({tid['id']})") for tid in report_type_ids]
     #     return results
+
+    @cached_property
+    def client(self) -> Client:
+        """Retrieve google client for communication to the YT reporting service.
+
+        If this is the first access to a client, application tries to create it. There are two options available:
+        1) Create a client just by supplying an access token found in parameters as '#api_token'.
+            It is used just during development when OAuth2 was not yet provided.
+        2) Create a client using OAuth credentials from component configuration.
+            This option ignores 'access_token'. It always creates a new token from a 'refresh_token'
+        """
+        if not self.client_yt:
+            user = passwd = ''
+            token_data = None
+            api_token = self.configuration.parameters.get('#api_token')
+            if not api_token:
+                user = self.configuration.oauth_credentials.appKey
+                passwd = self.configuration.oauth_credentials.appSecret
+                token_data = self.configuration.oauth_credentials.data
+            self.client_yt = Client(access_token=api_token, client_id=user, app_secret=passwd, token_data=token_data)
+        return self.client_yt
 
 
 """
