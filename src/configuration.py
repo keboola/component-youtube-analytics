@@ -11,8 +11,13 @@ class ConfigurationBase:
 
 
 @dataclass
-class Configuration(ConfigurationBase):
+class ReportSettings:
     report_types: list[str]
+
+
+@dataclass
+class Configuration(ConfigurationBase):
+    report_settings: ReportSettings
     on_behalf_of_content_owner: bool = False
     content_owner_id: str = ''
     debug: bool = False

@@ -69,7 +69,7 @@ class Component(ComponentBase):
         self.conf: Configuration = Configuration.fromDict(parameters=self.configuration.parameters)
 
         # Check configuration validity - report problem early
-        if not self.conf.report_types:
+        if not self.conf.report_settings.report_types:
             raise UserException('Configuration has no report types specified')
         if self.conf.on_behalf_of_content_owner and not self.conf.content_owner_id:
             raise UserException('Configuration assumes explicit content owner but none is specified')
@@ -92,7 +92,7 @@ class Component(ComponentBase):
         for key, job in previous_state['jobs'].items():
             if job.get('created') and \
                     (self.conf.content_owner_id is not previous_state['onBehalfOfContentOwner']
-                     or key not in self.conf.report_types):
+                     or key not in self.conf.report_settings.report_types):
                 context_description = f'Deleting job for {key}'
                 self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'],
                                        context_description=context_description)
@@ -108,7 +108,7 @@ class Component(ComponentBase):
         }
 
         # 4) Create needed jobs
-        for report_type_id in self.conf.report_types:
+        for report_type_id in self.conf.report_settings.report_types:
             # search corresponding job among all available jobs
             job_created = False
             job = next(filter(lambda x: x['reportTypeId'] == report_type_id, all_jobs), None)
