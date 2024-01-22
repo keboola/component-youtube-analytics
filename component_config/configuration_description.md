@@ -1,2 +1,2 @@
-**WARNING:** Please note that during the first execution, if there is no job for the specified Report Type yet,
+**WARNING:** Please note that during the first execution, if there is no job for the specified report type yet,
 the job is created, and no data is downloaded. **The first report may take up to 24 hours to be available.**
