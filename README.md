@@ -1,16 +1,16 @@
 # YouTube Analytics Extractor
 
-This data source component is using YouTube Reporting API to create and run reports that give you insights into the performance of your YouTube
+This data source component uses the YouTube Reporting API to create and run reports that give you insights into the performance of your YouTube
 content. Automate data retrieval from
 the [YouTube Analytics](https://developers.google.com/youtube/analytics/) reports.
 
 ## Prerequisites
 
-1. Get access to [YouTube Analytics](https://developers.google.com/youtube/analytics/) account.
+1. Get access to your [YouTube Analytics](https://developers.google.com/youtube/analytics/) account.
 
 ## Configuration
 
-1. Log into your account using the Authorize Account button in the Keboola interface.
+1. Log in to your account using the Authorize Account button in the Keboola interface.
 2. If applicable, you may check the `Use Content Owner ID` checkbox and specify the `Content Owner ID` parameter.
     - This parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on
       behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content
@@ -18,7 +18,7 @@ the [YouTube Analytics](https://developers.google.com/youtube/analytics/) report
       get access to all their video and channel data, without having to provide authentication credentials for each
       individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube
       content owner.
-3. Select the desired reports in the configuration. For full list of supported reports see
+3. Select the desired reports in the configuration. For a full list of supported reports, see
    the [Supported reports](#supported-reports) section.
 
 ## Supported reports
@@ -90,15 +90,15 @@ the [YouTube Reporting API documentation](https://developers.google.com/youtube/
 
 ## Functionality Notes
 
-- The component is using the [YouTube Reporting API](https://developers.google.com/youtube/reporting/v1/reports/) to
-  create and run reports that measure results of YouTube advertising campaigns.
-- **IMPORTANT:** The reporting service creates standardised reports every 24hrs. There is one job for each report type.
+- The component uses the [YouTube Reporting API](https://developers.google.com/youtube/reporting/v1/reports/) to
+  create and run reports that measure the results of YouTube advertising campaigns.
+- **IMPORTANT:** The reporting service creates standardised reports every 24 hours. There is one job for each report type.
   There may be
-  more reports (versions) associated with a job. Each report consists of data for one 24hour period. System may
-  generate more than one report for each 24hour period. It makes sense to consider only the latest (report's createTime)
-  report associated with specific 24hour period.
-    - During the first execution, if there is no Job for specified report_type yet, the job is created and no data is
-      downloaded. **It may take up to 24hrs for the first report to be available.**
+  more reports (versions) associated with a job. Each report consists of data for one 24-hour period. The system may
+  generate more than one report for each 24-hour period. It makes sense to consider only the latest (report's createTime)
+  report associated with specific 24-hour period.
+    - During the first execution, if there is no job for the specified report_type yet, the job is created and no data is
+      downloaded. **The first report may take up to 24 hours to be available.**
 
 
 Development
@@ -120,7 +120,7 @@ Development
 }
 ```
 
-If required, change local data folder (the `CUSTOM_FOLDER` placeholder) path to
+If required, change the local data folder (the `CUSTOM_FOLDER` placeholder) path to
 your custom path in the `docker-compose.yml` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +129,7 @@ your custom path in the `docker-compose.yml` file:
       - ./CUSTOM_FOLDER:/data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Clone this repository, init the workspace and run the component with following
+Clone this repository, init the workspace, and run the component with the following
 command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,6 +148,6 @@ docker-compose run --rm test
 Integration
 ===========
 
-For information about deployment and integration with KBC, please refer to the
-[deployment section of developers
-documentation](https://developers.keboola.com/extend/component/deployment/)
+For information about deployment and integration with Keboola, please refer to the
+[deployment section of our developer
+documentation](https://developers.keboola.com/extend/component/deployment/).
