@@ -1,5 +1,5 @@
 {
-  "title": "YouTube Reports",
+  "title": "YouTube reports",
   "type": "object",
   "required": [
     "on_behalf_of_content_owner",
@@ -8,7 +8,7 @@
   "properties": {
     "on_behalf_of_content_owner": {
       "type": "boolean",
-      "title": "Use Content Owner ID",
+      "title": "Use content owner ID",
       "format": "checkbox",
       "propertyOrder": 100,
       "description": "YouTube partners managing multiple accounts may run reports on behalf of different content owners.",
@@ -16,7 +16,7 @@
     },
     "content_owner_id": {
       "type": "string",
-      "title": "Content Owner",
+      "title": "Content owner",
       "propertyOrder": 200,
       "minLength": 1,
       "description": "Enter the ID of the content owner.",
@@ -27,7 +27,7 @@
       }
     },
     "report_settings": {
-      "title": "Report Settings",
+      "title": "Report settings",
       "type": "object",
       "propertyOrder": 500,
       "required": [
@@ -36,7 +36,7 @@
       "properties": {
         "report_types": {
           "type": "array",
-          "title": "Report Types",
+          "title": "Report types",
           "propertyOrder": 250,
           "minLength": 1,
           "description": "Select one of the available report types described in the <a href='https://developers.google.com/youtube/reporting/v1/reports/'>documentation</a>.",
