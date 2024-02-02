@@ -14,7 +14,7 @@ the [YouTube Analytics](https://developers.google.com/youtube/analytics/) report
 2. If applicable, you may check the `Use Content Owner ID` checkbox and specify the `Content Owner ID` parameter.
     - This parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on
       behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content
-      partners that own and manage many different YouTube channels. It allows content owners to authenticate once and
+      partners that own and manage multiple YouTube channels. It allows content owners to authenticate once and
       get access to all their video and channel data, without having to provide authentication credentials for each
       individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube
       content owner.
