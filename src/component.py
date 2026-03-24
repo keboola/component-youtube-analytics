@@ -15,7 +15,7 @@ from keboola.component.exceptions import UserException
 
 from configuration import Configuration
 from google_yt.client import Client
-from report_types import report_types
+from report_types import DEPRECATED_REPORT_TYPE_MAPPING, report_types
 
 
 class Component(ComponentBase):
@@ -74,6 +74,19 @@ class Component(ComponentBase):
             raise UserException("Configuration has no report types specified")
         if self.conf.on_behalf_of_content_owner and not self.conf.content_owner_id:
             raise UserException("Configuration assumes explicit content owner but none is specified")
+
+        # Migrate deprecated report type IDs to current versions
+        migrated_types = []
+        for rt in self.conf.report_settings.report_types:
+            if rt in DEPRECATED_REPORT_TYPE_MAPPING:
+                new_rt = DEPRECATED_REPORT_TYPE_MAPPING[rt]
+                logging.warning(
+                    f"Report type '{rt}' is deprecated, automatically using '{new_rt}' instead."
+                )
+                migrated_types.append(new_rt)
+            else:
+                migrated_types.append(rt)
+        self.conf.report_settings.report_types = migrated_types
 
         # Normalize configuration
         if not self.conf.on_behalf_of_content_owner:

@@ -112,7 +112,7 @@ Development
     "report_types": [
       "channel_cards_a1",
       "channel_annotations_a1",
-      "channel_basic_a2"
+      "channel_basic_a3"
     ],
     "on_behalf_of_content_owner": true,
     "content_owner_id": "123456789"

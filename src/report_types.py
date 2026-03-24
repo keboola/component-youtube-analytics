@@ -7,7 +7,53 @@ The 'metrics' list are not used. We have it here only for completion.
 Information on dimensions and metrics for individual report type IDs was retrieved from documentation found here:
 - https://developers.google.com/youtube/reporting/v1/reports/channel_reports
 - https://developers.google.com/youtube/reporting/v1/reports/content_owner_reports
+
+Note: As of June 24, 2025, Google incremented version numbers for all reports that include views
+(e.g. _a2 -> _a3) and added the engaged_views metric. Previous versions were deprecated on October 31, 2025.
+See: https://developers.google.com/youtube/reporting/revision_history
 """
+
+# Mapping from deprecated report type IDs to their current replacements.
+# Used to automatically migrate existing configurations.
+DEPRECATED_REPORT_TYPE_MAPPING = {
+    # Channel reports (_a2 -> _a3)
+    "channel_basic_a2": "channel_basic_a3",
+    "channel_combined_a2": "channel_combined_a3",
+    "channel_device_os_a2": "channel_device_os_a3",
+    "channel_playback_location_a2": "channel_playback_location_a3",
+    "channel_province_a2": "channel_province_a3",
+    "channel_subtitles_a2": "channel_subtitles_a3",
+    "channel_traffic_source_a2": "channel_traffic_source_a3",
+    # Content owner reports (_a3 -> _a4 for basic, _a2 -> _a3 for rest)
+    "content_owner_basic_a3": "content_owner_basic_a4",
+    "content_owner_province_a2": "content_owner_province_a3",
+    "content_owner_playback_location_a2": "content_owner_playback_location_a3",
+    "content_owner_traffic_source_a2": "content_owner_traffic_source_a3",
+    "content_owner_device_os_a2": "content_owner_device_os_a3",
+    "content_owner_subtitles_a2": "content_owner_subtitles_a3",
+    "content_owner_combined_a2": "content_owner_combined_a3",
+    # Playlist reports (_a1 -> _a2)
+    "playlist_basic_a1": "playlist_basic_a2",
+    "playlist_combined_a1": "playlist_combined_a2",
+    "playlist_device_os_a1": "playlist_device_os_a2",
+    "playlist_playback_location_a1": "playlist_playback_location_a2",
+    "playlist_province_a1": "playlist_province_a2",
+    "playlist_traffic_source_a1": "playlist_traffic_source_a2",
+    # Content owner playlist reports (_a1 -> _a2)
+    "content_owner_playlist_basic_a1": "content_owner_playlist_basic_a2",
+    "content_owner_playlist_province_a1": "content_owner_playlist_province_a2",
+    "content_owner_playlist_playback_location_a1": "content_owner_playlist_playback_location_a2",
+    "content_owner_playlist_traffic_source_a1": "content_owner_playlist_traffic_source_a2",
+    "content_owner_playlist_device_os_a1": "content_owner_playlist_device_os_a2",
+    "content_owner_playlist_combined_a1": "content_owner_playlist_combined_a2",
+    # Content owner asset reports (_a2 -> _a3)
+    "content_owner_asset_basic_a2": "content_owner_asset_basic_a3",
+    "content_owner_asset_province_a2": "content_owner_asset_province_a3",
+    "content_owner_asset_playback_location_a2": "content_owner_asset_playback_location_a3",
+    "content_owner_asset_traffic_source_a2": "content_owner_asset_traffic_source_a3",
+    "content_owner_asset_device_os_a2": "content_owner_asset_device_os_a3",
+    "content_owner_asset_combined_a2": "content_owner_asset_combined_a3",
+}
 
 report_types = {
     "channel_annotations_a1": {
@@ -31,9 +77,17 @@ report_types = {
             "annotation_closes",
         ],
     },
-    "channel_basic_a2": {
-        "dimensions": ["date", "channel_id", "video_id", "live_or_on_demand", "subscribed_status", "country_code"],
+    "channel_basic_a3": {
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "live_or_on_demand",
+            "subscribed_status",
+            "country_code",
+        ],
         "metrics": [
+            "engaged_views",
             "views",
             "comments",
             "likes",
@@ -83,7 +137,7 @@ report_types = {
             "card_teaser_clicks",
         ],
     },
-    "channel_combined_a2": {
+    "channel_combined_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -97,6 +151,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -118,7 +173,7 @@ report_types = {
         ],
         "metrics": ["views_percentage"],
     },
-    "channel_device_os_a2": {
+    "channel_device_os_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -130,6 +185,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -149,9 +205,13 @@ report_types = {
             "end_screen_element_type",
             "end_screen_element_id",
         ],
-        "metrics": ["end_screen_element_clicks", "end_screen_element_impressions", "end_screen_element_click_rate"],
+        "metrics": [
+            "end_screen_element_clicks",
+            "end_screen_element_impressions",
+            "end_screen_element_click_rate",
+        ],
     },
-    "channel_playback_location_a2": {
+    "channel_playback_location_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -163,6 +223,7 @@ report_types = {
             "playback_location_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -171,7 +232,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "channel_province_a2": {
+    "channel_province_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -182,7 +243,8 @@ report_types = {
             "province_code",
         ],
         "metrics": [
-            "	views",
+            "engaged_views",
+            "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
             "average_view_duration_percentage",
@@ -215,7 +277,7 @@ report_types = {
         ],
         "metrics": ["shares"],
     },
-    "channel_subtitles_a2": {
+    "channel_subtitles_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -227,6 +289,7 @@ report_types = {
             "subtitle_language_autotranslated",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -235,7 +298,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "channel_traffic_source_a2": {
+    "channel_traffic_source_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -247,6 +310,7 @@ report_types = {
             "traffic_source_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -255,7 +319,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "playlist_basic_a1": {
+    "playlist_basic_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -266,7 +330,8 @@ report_types = {
             "country_code",
         ],
         "metrics": [
-            "	views",
+            "engaged_views",
+            "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
             "playlist_starts",
@@ -274,7 +339,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "playlist_combined_a1": {
+    "playlist_combined_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -289,6 +354,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -297,7 +363,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "playlist_device_os_a1": {
+    "playlist_device_os_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -310,6 +376,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -318,7 +385,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "playlist_playback_location_a1": {
+    "playlist_playback_location_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -331,6 +398,7 @@ report_types = {
             "playback_location_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -339,7 +407,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "playlist_province_a1": {
+    "playlist_province_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -351,6 +419,7 @@ report_types = {
             "province_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -359,7 +428,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "playlist_traffic_source_a1": {
+    "playlist_traffic_source_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -372,6 +441,7 @@ report_types = {
             "traffic_source_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -380,7 +450,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_basic_a3": {
+    "content_owner_basic_a4": {
         "dimensions": [
             "date",
             "channel_id",
@@ -392,6 +462,7 @@ report_types = {
             "country_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "comments",
             "shares",
@@ -421,7 +492,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_province_a2": {
+    "content_owner_province_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -434,6 +505,7 @@ report_types = {
             "province_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -455,7 +527,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_playback_location_a2": {
+    "content_owner_playback_location_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -469,6 +541,7 @@ report_types = {
             "playback_location_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -477,7 +550,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_traffic_source_a2": {
+    "content_owner_traffic_source_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -491,6 +564,7 @@ report_types = {
             "traffic_source_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -499,7 +573,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_device_os_a2": {
+    "content_owner_device_os_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -513,6 +587,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -534,7 +609,7 @@ report_types = {
             "age_group",
             "gender",
         ],
-        "metrics": [""],
+        "metrics": ["views_percentage"],
     },
     "content_owner_sharing_service_a1": {
         "dimensions": [
@@ -608,9 +683,13 @@ report_types = {
             "end_screen_element_type",
             "end_screen_element_id",
         ],
-        "metrics": ["end_screen_element_clicks", "end_screen_element_impressions", "end_screen_element_click_rate"],
+        "metrics": [
+            "end_screen_element_clicks",
+            "end_screen_element_impressions",
+            "end_screen_element_click_rate",
+        ],
     },
-    "content_owner_subtitles_a2": {
+    "content_owner_subtitles_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -624,6 +703,7 @@ report_types = {
             "subtitle_language_autotranslated",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -632,7 +712,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_combined_a2": {
+    "content_owner_combined_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -648,6 +728,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -656,7 +737,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_playlist_basic_a1": {
+    "content_owner_playlist_basic_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -667,6 +748,7 @@ report_types = {
             "country_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -675,7 +757,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_playlist_province_a1": {
+    "content_owner_playlist_province_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -687,6 +769,7 @@ report_types = {
             "province_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -695,7 +778,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_playlist_playback_location_a1": {
+    "content_owner_playlist_playback_location_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -708,6 +791,7 @@ report_types = {
             "playback_location_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -716,7 +800,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_playlist_traffic_source_a1": {
+    "content_owner_playlist_traffic_source_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -729,6 +813,7 @@ report_types = {
             "traffic_source_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -737,7 +822,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_playlist_device_os_a1": {
+    "content_owner_playlist_device_os_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -750,6 +835,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -758,7 +844,7 @@ report_types = {
             "playlist_saves_removed",
         ],
     },
-    "content_owner_playlist_combined_a1": {
+    "content_owner_playlist_combined_a2": {
         "dimensions": [
             "date",
             "channel_id",
@@ -773,6 +859,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -782,11 +869,26 @@ report_types = {
         ],
     },
     "content_owner_ad_rates_a1": {
-        "dimensions": ["date", "channel_id", "video_id", "claimed_status", "uploader_type", "country_code", "ad_type"],
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "claimed_status",
+            "uploader_type",
+            "country_code",
+            "ad_type",
+        ],
         "metrics": ["estimated_youtube_ad_revenue", "ad_impressions", "estimated_cpm"],
     },
     "content_owner_estimated_revenue_a1": {
-        "dimensions": ["date", "channel_id", "video_id", "claimed_status", "uploader_type", "country_code"],
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "claimed_status",
+            "uploader_type",
+            "country_code",
+        ],
         "metrics": [
             "estimated_partner_revenue",
             "estimated_partner_ad_revenue",
@@ -802,7 +904,15 @@ report_types = {
         ],
     },
     "content_owner_asset_estimated_revenue_a1": {
-        "dimensions": ["date", "channel_id", "video_id", "asset_id", "claimed_status", "uploader_type", "country_code"],
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "asset_id",
+            "claimed_status",
+            "uploader_type",
+            "country_code",
+        ],
         "metrics": [
             "estimated_partner_revenue",
             "estimated_partner_ad_revenue",
@@ -812,7 +922,7 @@ report_types = {
             "estimated_partner_transaction_revenue",
         ],
     },
-    "content_owner_asset_basic_a2": {
+    "content_owner_asset_basic_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -825,6 +935,7 @@ report_types = {
             "country_code",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "comments",
             "likes",
@@ -852,7 +963,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_asset_province_a2": {
+    "content_owner_asset_province_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -866,7 +977,8 @@ report_types = {
             "province_code",
         ],
         "metrics": [
-            "	views",
+            "engaged_views",
+            "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
             "average_view_duration_percentage",
@@ -887,7 +999,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_asset_playback_location_a2": {
+    "content_owner_asset_playback_location_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -902,6 +1014,7 @@ report_types = {
             "playback_location_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -910,7 +1023,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_asset_traffic_source_a2": {
+    "content_owner_asset_traffic_source_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -925,6 +1038,7 @@ report_types = {
             "traffic_source_detail",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -933,7 +1047,7 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
-    "content_owner_asset_device_os_a2": {
+    "content_owner_asset_device_os_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -948,6 +1062,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
@@ -1048,9 +1163,13 @@ report_types = {
             "end_screen_element_type",
             "end_screen_element_id",
         ],
-        "metrics": ["end_screen_element_clicks", "end_screen_element_impressions", "end_screen_element_click_rate"],
+        "metrics": [
+            "end_screen_element_clicks",
+            "end_screen_element_impressions",
+            "end_screen_element_click_rate",
+        ],
     },
-    "content_owner_asset_combined_a2": {
+    "content_owner_asset_combined_a3": {
         "dimensions": [
             "date",
             "channel_id",
@@ -1067,6 +1186,7 @@ report_types = {
             "operating_system",
         ],
         "metrics": [
+            "engaged_views",
             "views",
             "watch_time_minutes",
             "average_view_duration_seconds",
