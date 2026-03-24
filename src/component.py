@@ -2,6 +2,7 @@
 Component is a main class implementing specific YouTube reporting extractor.
 
 """
+
 import csv
 import logging
 import os
@@ -14,27 +15,27 @@ from keboola.component.exceptions import UserException
 
 from configuration import Configuration
 from google_yt.client import Client
-from report_types import report_types
+from report_types import DEPRECATED_REPORT_TYPE_MAPPING, report_types
 
 
 class Component(ComponentBase):
     """
-        Extends base class for general Python components. Initializes the CommonInterface
-        and performs configuration validation.
+    Extends base class for general Python components. Initializes the CommonInterface
+    and performs configuration validation.
 
-        For easier debugging the data folder is picked up by default from `../data` path,
-        relative to working directory.
+    For easier debugging the data folder is picked up by default from `../data` path,
+    relative to working directory.
 
-        If `debug` parameter is present in the `config.json`, the default logger is set to verbose DEBUG mode.
+    If `debug` parameter is present in the `config.json`, the default logger is set to verbose DEBUG mode.
 
-        The extractor algorithm is documented under the Component.run(self) method.
+    The extractor algorithm is documented under the Component.run(self) method.
     """
 
     def __init__(self):
         super().__init__()
         self.conf = None
         self.client_yt = None
-        logging.getLogger('googleapiclient.http').setLevel(logging.ERROR)
+        logging.getLogger("googleapiclient.http").setLevel(logging.ERROR)
 
     def run(self):
         """Main execution code
@@ -66,70 +67,103 @@ class Component(ComponentBase):
         """
 
         # 1) Initialize Configuration
-        self.conf: Configuration = Configuration.fromDict(parameters=self.configuration.parameters)
+        self.conf: Configuration = Configuration.fromDict(
+            parameters=self.configuration.parameters
+        )
 
         # Check configuration validity - report problem early
         if not self.conf.report_settings.report_types:
-            raise UserException('Configuration has no report types specified')
+            raise UserException("Configuration has no report types specified")
         if self.conf.on_behalf_of_content_owner and not self.conf.content_owner_id:
-            raise UserException('Configuration assumes explicit content owner but none is specified')
+            raise UserException(
+                "Configuration assumes explicit content owner but none is specified"
+            )
+
+        # Migrate deprecated report type IDs to current versions
+        migrated_types = []
+        for rt in self.conf.report_settings.report_types:
+            if rt in DEPRECATED_REPORT_TYPE_MAPPING:
+                new_rt = DEPRECATED_REPORT_TYPE_MAPPING[rt]
+                logging.warning(
+                    f"Report type '{rt}' is deprecated, automatically using '{new_rt}' instead."
+                )
+                migrated_types.append(new_rt)
+            else:
+                migrated_types.append(rt)
+        self.conf.report_settings.report_types = migrated_types
 
         # Normalize configuration
         if not self.conf.on_behalf_of_content_owner:
-            self.conf.content_owner_id = ''
+            self.conf.content_owner_id = ""
 
         # 2) Retrieve state - get last state data/in/state.json from previous run
         previous_state = self.get_state_file()
-        logging.debug(f'Original state: {previous_state}')
+        logging.debug(f"Original state: {previous_state}")
 
         # normalize state to a compatible version
-        if 'onBehalfOfContentOwner' not in previous_state:
-            previous_state['onBehalfOfContentOwner'] = ''
-        if 'jobs' not in previous_state:
-            previous_state['jobs'] = dict()
+        if "onBehalfOfContentOwner" not in previous_state:
+            previous_state["onBehalfOfContentOwner"] = ""
+        if "jobs" not in previous_state:
+            previous_state["jobs"] = dict()
 
         # 3) Cleanup - remove created (by this configuration) jobs that are not requested
-        for key, job in previous_state['jobs'].items():
-            if job.get('created') and \
-                    (self.conf.content_owner_id is not previous_state['onBehalfOfContentOwner']
-                     or key not in self.conf.report_settings.report_types):
-                context_description = f'Deleting job for {key}'
-                self.client.delete_job(job_id=job['id'], on_behalf_of_owner=previous_state['onBehalfOfContentOwner'],
-                                       context_description=context_description)
+        for key, job in previous_state["jobs"].items():
+            if job.get("created") and (
+                self.conf.content_owner_id
+                is not previous_state["onBehalfOfContentOwner"]
+                or key not in self.conf.report_settings.report_types
+            ):
+                context_description = f"Deleting job for {key}"
+                self.client.delete_job(
+                    job_id=job["id"],
+                    on_behalf_of_owner=previous_state["onBehalfOfContentOwner"],
+                    context_description=context_description,
+                )
 
-        context_description = 'listing all jobs' + \
-                              (f' for owner {self.conf.content_owner_id}' if self.conf.content_owner_id else '')
-        all_jobs = self.client.list_jobs(on_behalf_of_owner=self.conf.content_owner_id,
-                                         context_description=context_description)
+        context_description = "listing all jobs" + (
+            f" for owner {self.conf.content_owner_id}"
+            if self.conf.content_owner_id
+            else ""
+        )
+        all_jobs = self.client.list_jobs(
+            on_behalf_of_owner=self.conf.content_owner_id,
+            context_description=context_description,
+        )
 
         new_state = {
             "onBehalfOfContentOwner": self.conf.content_owner_id,
-            "jobs": dict()
+            "jobs": dict(),
         }
 
         # 4) Create needed jobs
         for report_type_id in self.conf.report_settings.report_types:
             # search corresponding job among all available jobs
             job_created = False
-            job = next(filter(lambda x: x['reportTypeId'] == report_type_id, all_jobs), None)
+            job = next(
+                filter(lambda x: x["reportTypeId"] == report_type_id, all_jobs), None
+            )
             if not job:
-                new_job_name = f'keboola_{report_type_id}'
-                logging.warning(f"No existing job found, creating new one named: {new_job_name}")
-                context_description = f'Creating job for {report_type_id}'
-                job = self.client.create_job(new_job_name,
-                                             report_type_id=report_type_id,
-                                             on_behalf_of_owner=self.conf.content_owner_id,
-                                             context_description=context_description)
+                new_job_name = f"keboola_{report_type_id}"
+                logging.warning(
+                    f"No existing job found, creating new one named: {new_job_name}"
+                )
+                context_description = f"Creating job for {report_type_id}"
+                job = self.client.create_job(
+                    new_job_name,
+                    report_type_id=report_type_id,
+                    on_behalf_of_owner=self.conf.content_owner_id,
+                    context_description=context_description,
+                )
                 job_created = True
-            job_from_state = previous_state['jobs'].get(report_type_id)
-            if job_from_state and job_from_state['id'] == job['id']:
-                new_state['jobs'][report_type_id] = job_from_state
+            job_from_state = previous_state["jobs"].get(report_type_id)
+            if job_from_state and job_from_state["id"] == job["id"]:
+                new_state["jobs"][report_type_id] = job_from_state
             else:
-                new_state['jobs'][report_type_id] = job
-                job['created'] = job_created
+                new_state["jobs"][report_type_id] = job
+                job["created"] = job_created
 
         # 5) Download reports
-        for job in new_state['jobs'].values():
+        for job in new_state["jobs"].values():
             self.process_job(job)
 
         # 6) Write new state
@@ -154,48 +188,60 @@ class Component(ComponentBase):
         """
 
         # Retrie reports that were not processed yet (if no state info available then request all)
-        logging.info(f'Processing job for report: {job.get("reportTypeId")}')
-        last_report_create_time = job.get('lastReportCreateTime')
-        context_description = f'Listing reports after {last_report_create_time}'
-        reports = self.client.list_reports(job_id=job['id'], created_after=last_report_create_time,
-                                           context_description=context_description)
+        logging.info(f"Processing job for report: {job.get('reportTypeId')}")
+        last_report_create_time = job.get("lastReportCreateTime")
+        context_description = f"Listing reports after {last_report_create_time}"
+        reports = self.client.list_reports(
+            job_id=job["id"],
+            created_after=last_report_create_time,
+            context_description=context_description,
+        )
         if not reports:
             logging.warning(
                 "No new reports were found, the jobs weren't created yet or there are no new reports. "
-                "It may take up to 24 hours for a brand new job to generate reports.")
+                "It may take up to 24 hours for a brand new job to generate reports."
+            )
             return
 
-        logging.info(f'{len(reports)} new reports found!')
+        logging.info(f"{len(reports)} new reports found!")
 
         # Prepare output table description (manifest)
         # Note: We specify keys here but update columns information only after reports were downloaded
-        report_type_id = job['reportTypeId']
-        table_def = self.create_out_table_definition(f'{report_type_id}.csv',
-                                                     incremental=True,
-                                                     is_sliced=True,
-                                                     primary_key=report_types[report_type_id]['dimensions']
-                                                     )
+        report_type_id = job["reportTypeId"]
+        table_def = self.create_out_table_definition(
+            f"{report_type_id}.csv",
+            incremental=True,
+            is_sliced=True,
+            primary_key=report_types[report_type_id]["dimensions"],
+        )
         os.makedirs(table_def.full_path, exist_ok=True)
 
-        report_raw_full_path = f'{self.files_out_path}/{report_type_id}.csv'
+        report_raw_full_path = f"{self.files_out_path}/{report_type_id}.csv"
         os.makedirs(report_raw_full_path, exist_ok=True)
 
         # Retrieve create time of the latest available report and store it in the new state
-        reports = sorted(reports, key=lambda d: d['createTime'], reverse=True)
+        reports = sorted(reports, key=lambda d: d["createTime"], reverse=True)
         # By updating job object here we actually update an item in new state
-        job['lastReportCreateTime'] = reports[0]['createTime']
+        job["lastReportCreateTime"] = reports[0]["createTime"]
 
         # Sort list of reports based on data period (startTime) and then on creation time (createTime).
-        reports = sorted(reports, key=lambda d: d['startTime'] + d['createTime'])
+        reports = sorted(reports, key=lambda d: d["startTime"] + d["createTime"])
 
         for index in range(len(reports)):
             report = reports[index]
             # Consider only the last report among a set of reports for specific date period
-            if index + 1 == len(reports) or report['startTime'] != reports[index + 1]['startTime']:
-                filename_raw = f'{report_raw_full_path}/{report["startTime"].replace(":", "_")}.csv'
-                filename_tgt = f'{table_def.full_path}/{report["startTime"].replace(":", "_")}.csv'
+            if (
+                index + 1 == len(reports)
+                or report["startTime"] != reports[index + 1]["startTime"]
+            ):
+                filename_raw = f"{report_raw_full_path}/{report['startTime'].replace(':', '_')}.csv"
+                filename_tgt = (
+                    f"{table_def.full_path}/{report['startTime'].replace(':', '_')}.csv"
+                )
 
-                self.download_report_to_file(downloadUrl=report['downloadUrl'], target_filename=filename_raw)
+                self.download_report_to_file(
+                    downloadUrl=report["downloadUrl"], target_filename=filename_raw
+                )
                 if not table_def.columns:
                     columns = self._read_columns(filename_raw)
                     table_def.columns = columns
@@ -206,7 +252,7 @@ class Component(ComponentBase):
     @staticmethod
     def _read_columns(filename) -> list:
         with open(filename) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',')
+            csvreader = csv.reader(csvfile, delimiter=",")
             header = next(csvreader)
             return header
 
@@ -217,7 +263,7 @@ class Component(ComponentBase):
             filename_raw: Original csv file containing header line
             filename_tgt: Destination csv file without header line
         """
-        with open(filename_raw, mode='rt') as src, open(filename_tgt, mode='wt') as tgt:
+        with open(filename_raw, mode="rt") as src, open(filename_tgt, mode="wt") as tgt:
             src.readline()
             while True:
                 row = src.readline()
@@ -226,7 +272,9 @@ class Component(ComponentBase):
                 tgt.write(row)
         pass
 
-    @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24)
+    @backoff.on_exception(
+        backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24
+    )
     def download_report_to_file(self, downloadUrl: str, target_filename: str):
         """Download a report from media URL to target CSV file
 
@@ -234,10 +282,13 @@ class Component(ComponentBase):
             downloadUrl: URL providing report data
             target_filename: Local file where to write the data
         """
-        context_description = f'Downloading report to file {target_filename}'
+        context_description = f"Downloading report to file {target_filename}"
         logging.info(context_description)
-        self.client.download_report_file(download_url=downloadUrl, filename=target_filename,
-                                         context_description=context_description)
+        self.client.download_report_file(
+            download_url=downloadUrl,
+            filename=target_filename,
+            context_description=context_description,
+        )
 
     # Eventually we opted not to read report type ids dynamically.
     # Instead, we just use fixed set of types as retrieved from the API documentation.
@@ -258,14 +309,19 @@ class Component(ComponentBase):
             This option ignores 'access_token'. It always creates a new token from a 'refresh_token'
         """
         if not self.client_yt:
-            user = passwd = ''
+            user = passwd = ""
             token_data = None
-            api_token = self.configuration.parameters.get('#api_token')
+            api_token = self.configuration.parameters.get("#api_token")
             if not api_token:
                 user = self.configuration.oauth_credentials.appKey
                 passwd = self.configuration.oauth_credentials.appSecret
                 token_data = self.configuration.oauth_credentials.data
-            self.client_yt = Client(access_token=api_token, client_id=user, app_secret=passwd, token_data=token_data)
+            self.client_yt = Client(
+                access_token=api_token,
+                client_id=user,
+                app_secret=passwd,
+                token_data=token_data,
+            )
         return self.client_yt
 
 
