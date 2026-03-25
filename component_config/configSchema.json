@@ -9,7 +9,7 @@
             "format": "checkbox",
             "propertyOrder": 100,
             "description": "YouTube partners managing multiple accounts may run reports on behalf of different content owners.",
-            "default": false,
+            "default": false
         },
         "content_owner_id": {
             "type": "string",
@@ -17,7 +17,7 @@
             "propertyOrder": 200,
             "minLength": 1,
             "description": "Enter the ID of the content owner.",
-            "options": {"dependencies": {"on_behalf_of_content_owner": true}},
+            "options": {"dependencies": {"on_behalf_of_content_owner": true}}
         },
         "report_settings": {
             "title": "Report settings",
@@ -75,34 +75,7 @@
                             "content_owner_ad_rates_a1",
                             "content_owner_estimated_revenue_a1",
                             "content_owner_asset_estimated_revenue_a1",
-                            "content_owner_asset_basic_a3",
-                            "channel_basic_a2",
-                            "channel_combined_a2",
-                            "channel_device_os_a2",
-                            "channel_playback_location_a2",
-                            "channel_province_a2",
-                            "channel_subtitles_a2",
-                            "channel_traffic_source_a2",
-                            "playlist_basic_a1",
-                            "playlist_combined_a1",
-                            "playlist_device_os_a1",
-                            "playlist_playback_location_a1",
-                            "playlist_province_a1",
-                            "playlist_traffic_source_a1",
-                            "content_owner_basic_a3",
-                            "content_owner_province_a2",
-                            "content_owner_playback_location_a2",
-                            "content_owner_traffic_source_a2",
-                            "content_owner_device_os_a2",
-                            "content_owner_subtitles_a2",
-                            "content_owner_combined_a2",
-                            "content_owner_playlist_basic_a1",
-                            "content_owner_playlist_province_a1",
-                            "content_owner_playlist_playback_location_a1",
-                            "content_owner_playlist_traffic_source_a1",
-                            "content_owner_playlist_device_os_a1",
-                            "content_owner_playlist_combined_a1",
-                            "content_owner_asset_basic_a2",
+                            "content_owner_asset_basic_a3"
                         ],
                         "options": {
                             "enum_titles": [
@@ -145,39 +118,12 @@
                                 "Content owner ad rate reports",
                                 "Content owner estimated video revenue",
                                 "Content owner estimated asset revenue",
-                                "Content owner user activity (content_owner_asset_basic_a3)",
-                                "[DEPRECATED] Channel user activity (channel_basic_a2)",
-                                "[DEPRECATED] Channel combined (channel_combined_a2)",
-                                "[DEPRECATED] Channel device and OS (channel_device_os_a2)",
-                                "[DEPRECATED] Channel playback locations (channel_playback_location_a2)",
-                                "[DEPRECATED] Channel province (channel_province_a2)",
-                                "[DEPRECATED] Channel subtitles (channel_subtitles_a2)",
-                                "[DEPRECATED] Channel traffic sources (channel_traffic_source_a2)",
-                                "[DEPRECATED] Playlist user activity (playlist_basic_a1)",
-                                "[DEPRECATED] Playlist combined (playlist_combined_a1)",
-                                "[DEPRECATED] Playlist device and OS (playlist_device_os_a1)",
-                                "[DEPRECATED] Playlist playback locations (playlist_playback_location_a1)",
-                                "[DEPRECATED] Playlist province (playlist_province_a1)",
-                                "[DEPRECATED] Playlist traffic sources (playlist_traffic_source_a1)",
-                                "[DEPRECATED] Content owner user activity (content_owner_basic_a3)",
-                                "[DEPRECATED] Content owner province (content_owner_province_a2)",
-                                "[DEPRECATED] Content owner playback locations (content_owner_playback_location_a2)",
-                                "[DEPRECATED] Content owner traffic sources (content_owner_traffic_source_a2)",
-                                "[DEPRECATED] Content owner device and OS (content_owner_device_os_a2)",
-                                "[DEPRECATED] Content owner subtitles (content_owner_subtitles_a2)",
-                                "[DEPRECATED] Content owner combined (content_owner_combined_a2)",
-                                "[DEPRECATED] Content owner playlist user activity (content_owner_playlist_basic_a1)",
-                                "[DEPRECATED] Content owner playlist province (content_owner_playlist_province_a1)",
-                                "[DEPRECATED] Content owner playlist playback locations (content_owner_playlist_playback_location_a1)",
-                                "[DEPRECATED] Content owner playlist traffic sources (content_owner_playlist_traffic_source_a1)",
-                                "[DEPRECATED] Content owner playlist device and OS (content_owner_playlist_device_os_a1)",
-                                "[DEPRECATED] Content owner playlist combined (content_owner_playlist_combined_a1)",
-                                "[DEPRECATED] Content owner asset user activity (content_owner_asset_basic_a2)",
+                                "Content owner user activity (content_owner_asset_basic_a3)"
                             ]
-                        },
-                    },
+                        }
+                    }
                 }
-            },
-        },
-    },
+            }
+        }
+    }
 }
