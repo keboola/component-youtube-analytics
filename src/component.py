@@ -105,7 +105,7 @@ class Component(ComponentBase):
         # 3) Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state["jobs"].items():
             if job.get("created") and (
-                self.conf.content_owner_id is not previous_state["onBehalfOfContentOwner"]
+                self.conf.content_owner_id != previous_state["onBehalfOfContentOwner"]
                 or key not in self.conf.report_settings.report_types
             ):
                 context_description = f"Deleting job for {key}"
