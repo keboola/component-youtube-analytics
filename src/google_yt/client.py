@@ -1,3 +1,4 @@
+import backoff
 import io
 from functools import wraps
 
@@ -174,6 +175,7 @@ class Client:
         return results.get("jobs", [])
 
     @handle_http_error
+    @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=60)
     def list_reports(self, job_id: str, on_behalf_of_owner: str = "", created_after: str = "", context_description=""):
         """List reports associated with specified job
 

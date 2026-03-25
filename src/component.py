@@ -218,9 +218,9 @@ class Component(ComponentBase):
                 filename_tgt = f"{table_def.full_path}/{report['startTime'].replace(':', '_')}.csv"
 
                 self.download_report_to_file(downloadUrl=report["downloadUrl"], target_filename=filename_raw)
-                if not table_def.columns:
+                if not table_def.column_names:
                     columns = self._read_columns(filename_raw)
-                    table_def.columns = columns
+                    table_def.add_columns(columns)
                 self._strip_header(filename_raw, filename_tgt)
         # We store the manifest only after columns were updated according to downloaded report
         self.write_manifest(table_def)
