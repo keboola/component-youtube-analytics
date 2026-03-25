@@ -1,0 +1,14 @@
+LICENSE.md
+README.md
+pyproject.toml
+src/component.py
+src/configuration.py
+src/report_types.py
+src/component_youtube_analytics.egg-info/PKG-INFO
+src/component_youtube_analytics.egg-info/SOURCES.txt
+src/component_youtube_analytics.egg-info/dependency_links.txt
+src/component_youtube_analytics.egg-info/requires.txt
+src/component_youtube_analytics.egg-info/top_level.txt
+src/google_yt/__init__.py
+src/google_yt/client.py
+tests/test_component.py

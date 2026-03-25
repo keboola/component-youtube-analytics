@@ -8,15 +8,15 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from keboola.component.exceptions import UserException
 
-SCOPES = ['https://www.googleapis.com/auth/yt-analytics-monetary.readonly']
-API_SERVICE_NAME = 'youtubereporting'
-API_VERSION = 'v1'
+SCOPES = ["https://www.googleapis.com/auth/yt-analytics-monetary.readonly"]
+API_SERVICE_NAME = "youtubereporting"
+API_VERSION = "v1"
 
 
 class Client:
-
-    def __init__(self, access_token: str = None, client_id: str = None, app_secret: str = None,
-                 token_data: dict = None):
+    def __init__(
+        self, access_token: str = None, client_id: str = None, app_secret: str = None, token_data: dict = None
+    ):
         self.service = None
         if access_token:
             credentials = Credentials(token=access_token)
@@ -27,15 +27,13 @@ class Client:
                     "client_id": client_id,
                     "client_secret": app_secret,
                     "auth_uri": "https://oauth2.googleapis.com/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token"
+                    "token_uri": "https://oauth2.googleapis.com/token",
                 }
             }
             # make sure the token is expired explicitly to force refresh
-            token_data['expires_at'] = 0
+            token_data["expires_at"] = 0
             credentials = Flow.from_client_config(client_secrets, scopes=SCOPES, token=token_data).credentials
-        self.service = build(serviceName=API_SERVICE_NAME,
-                             version=API_VERSION,
-                             credentials=credentials)
+        self.service = build(serviceName=API_SERVICE_NAME, version=API_VERSION, credentials=credentials)
         pass
 
     @staticmethod
@@ -51,19 +49,19 @@ class Client:
 
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            context_description = kwargs.get('context_description') if 'context_description' in kwargs else ''
+            context_description = kwargs.get("context_description") if "context_description" in kwargs else ""
             try:
                 result = func(self, *args, **kwargs)
                 return result
             except HttpError as error:
-                raise UserException(f'{context_description} - Http error {error.status_code}: {error.reason}')
+                raise UserException(f"{context_description} - Http error {error.status_code}: {error.reason}")
             except Exception:
                 raise
 
         return wrapper
 
     @handle_http_error
-    def list_report_types(self, on_behalf_of_owner='', include_system_managed=False, context_description=''):
+    def list_report_types(self, on_behalf_of_owner="", include_system_managed=False, context_description=""):
         """Returns a list of report types that the channel or content owner can retrieve
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/reportTypes/list
@@ -75,14 +73,14 @@ class Client:
         """
         kwargs = dict()
         if on_behalf_of_owner:
-            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+            kwargs["onBehalfOfContentOwner"] = on_behalf_of_owner
         if include_system_managed:
-            kwargs['includeSystemManaged'] = include_system_managed
+            kwargs["includeSystemManaged"] = include_system_managed
         results = self.service.reportTypes().list(**kwargs).execute()
-        return results.get('reportTypes')
+        return results.get("reportTypes")
 
     @handle_http_error
-    def create_job(self, name: str, report_type_id: str, on_behalf_of_owner='', context_description=''):
+    def create_job(self, name: str, report_type_id: str, on_behalf_of_owner="", context_description=""):
         """Create a job for specific report type.
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/create
@@ -112,19 +110,16 @@ class Client:
                 403 - Forbidden - attempt to create system managed report
                 409 - Conflict - resource already exists
         """
-        body = {
-            'name': name,
-            'reportTypeId': report_type_id
-        }
+        body = {"name": name, "reportTypeId": report_type_id}
         kwargs = dict()
         if on_behalf_of_owner:
-            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+            kwargs["onBehalfOfContentOwner"] = on_behalf_of_owner
 
         results = self.service.jobs().create(body=body, **kwargs).execute()
         return results
 
     @handle_http_error
-    def delete_job(self, job_id: str, on_behalf_of_owner='', context_description=''):
+    def delete_job(self, job_id: str, on_behalf_of_owner="", context_description=""):
         """Delete existing job
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/delete
@@ -136,7 +131,7 @@ class Client:
         """
         kwargs = {}
         if on_behalf_of_owner:
-            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+            kwargs["onBehalfOfContentOwner"] = on_behalf_of_owner
         try:
             self.service.jobs().delete(jobId=job_id, **kwargs).execute()
         except HttpError as ex:
@@ -146,7 +141,7 @@ class Client:
         return
 
     @handle_http_error
-    def list_jobs(self, on_behalf_of_owner: str = '', include_system_managed=False, context_description=''):
+    def list_jobs(self, on_behalf_of_owner: str = "", include_system_managed=False, context_description=""):
         """List jobs
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs/list
@@ -171,16 +166,15 @@ class Client:
         """
         kwargs = {}
         if on_behalf_of_owner:
-            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+            kwargs["onBehalfOfContentOwner"] = on_behalf_of_owner
         if include_system_managed:
-            kwargs['includeSystemManaged'] = include_system_managed
+            kwargs["includeSystemManaged"] = include_system_managed
 
         results = self.service.jobs().list(**kwargs).execute()
-        return results.get('jobs', [])
+        return results.get("jobs", [])
 
     @handle_http_error
-    def list_reports(self, job_id: str, on_behalf_of_owner: str = '', created_after: str = '',
-                     context_description=''):
+    def list_reports(self, job_id: str, on_behalf_of_owner: str = "", created_after: str = "", context_description=""):
         """List reports associated with specified job
 
         Uses API: https://developers.google.com/youtube/reporting/v1/reference/rest/v1/jobs.reports/list
@@ -210,23 +204,23 @@ class Client:
         """
         kwargs = dict()
         if on_behalf_of_owner:
-            kwargs['onBehalfOfContentOwner'] = on_behalf_of_owner
+            kwargs["onBehalfOfContentOwner"] = on_behalf_of_owner
         if created_after:
-            kwargs['createdAfter'] = created_after
+            kwargs["createdAfter"] = created_after
         reports = []
         while True:
             results = self.service.jobs().reports().list(jobId=job_id, **kwargs).execute()
-            if 'reports' not in results:
+            if "reports" not in results:
                 break  # if there were no reports yet, there is no reports list at all
-            reports.extend(results['reports'])
-            if 'nextPageToken' not in results:
+            reports.extend(results["reports"])
+            if "nextPageToken" not in results:
                 break  # There are no more data, leave the loop
-            kwargs['pageToken'] = results['nextPageToken']
+            kwargs["pageToken"] = results["nextPageToken"]
 
         return reports
 
     @handle_http_error
-    def download_report_file(self, download_url: str, filename: str, context_description=''):
+    def download_report_file(self, download_url: str, filename: str, context_description=""):
         """Download generated report (specified by media URL) into a local file.
 
         GCP library provides dedicated method to download a stream of data into a local file.
@@ -236,10 +230,10 @@ class Client:
             filename: Target file where to write the data
             context_description: text that will be used in handle_http_error decorator
         """
-        request = self.service.media().download_media(resourceName='')
+        request = self.service.media().download_media(resourceName="")
         request.uri = download_url
 
-        with io.FileIO(filename, mode='wb') as out_file:
+        with io.FileIO(filename, mode="wb") as out_file:
             downloader = MediaIoBaseDownload(out_file, request)
             download_finished = False
             while download_finished is False:
