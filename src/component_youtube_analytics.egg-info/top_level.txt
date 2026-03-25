@@ -1,4 +1,0 @@
-component
-configuration
-google_yt
-report_types
