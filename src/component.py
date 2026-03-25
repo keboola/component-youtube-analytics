@@ -15,7 +15,7 @@ from keboola.component.exceptions import UserException
 
 from configuration import Configuration
 from google_yt.client import Client
-from report_types import report_types
+from report_types import DEPRECATED_REPORT_TYPE_MAPPING, report_types
 
 
 class Component(ComponentBase):
@@ -75,6 +75,17 @@ class Component(ComponentBase):
         if self.conf.on_behalf_of_content_owner and not self.conf.content_owner_id:
             raise UserException("Configuration assumes explicit content owner but none is specified")
 
+        # Migrate deprecated report type IDs to current versions
+        migrated_types = []
+        for rt in self.conf.report_settings.report_types:
+            if rt in DEPRECATED_REPORT_TYPE_MAPPING:
+                new_rt = DEPRECATED_REPORT_TYPE_MAPPING[rt]
+                logging.warning(f"Report type '{rt}' is deprecated, automatically using '{new_rt}' instead.")
+                migrated_types.append(new_rt)
+            else:
+                migrated_types.append(rt)
+        self.conf.report_settings.report_types = migrated_types
+
         # Normalize configuration
         if not self.conf.on_behalf_of_content_owner:
             self.conf.content_owner_id = ""
@@ -92,7 +103,7 @@ class Component(ComponentBase):
         # 3) Cleanup - remove created (by this configuration) jobs that are not requested
         for key, job in previous_state["jobs"].items():
             if job.get("created") and (
-                self.conf.content_owner_id is not previous_state["onBehalfOfContentOwner"]
+                self.conf.content_owner_id != previous_state["onBehalfOfContentOwner"]
                 or key not in self.conf.report_settings.report_types
             ):
                 context_description = f"Deleting job for {key}"
@@ -205,9 +216,9 @@ class Component(ComponentBase):
                 filename_tgt = f"{table_def.full_path}/{report['startTime'].replace(':', '_')}.csv"
 
                 self.download_report_to_file(downloadUrl=report["downloadUrl"], target_filename=filename_raw)
-                if not table_def.columns:
+                if not table_def.column_names:
                     columns = self._read_columns(filename_raw)
-                    table_def.columns = columns
+                    table_def.add_columns(columns)
                 self._strip_header(filename_raw, filename_tgt)
         # We store the manifest only after columns were updated according to downloaded report
         self.write_manifest(table_def)

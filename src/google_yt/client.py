@@ -1,6 +1,7 @@
 import io
 from functools import wraps
 
+import backoff
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -174,6 +175,7 @@ class Client:
         return results.get("jobs", [])
 
     @handle_http_error
+    @backoff.on_exception(backoff.expo, HttpError, jitter=None, max_tries=3, base=1.7, factor=24)
     def list_reports(self, job_id: str, on_behalf_of_owner: str = "", created_after: str = "", context_description=""):
         """List reports associated with specified job
 
