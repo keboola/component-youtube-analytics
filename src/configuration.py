@@ -4,7 +4,6 @@ import dataconf
 
 
 class ConfigurationBase:
-
     @staticmethod
     def fromDict(parameters: dict):
         return dataconf.dict(parameters, Configuration, ignore_unexpected=True)
@@ -19,5 +18,5 @@ class ReportSettings:
 class Configuration(ConfigurationBase):
     report_settings: ReportSettings
     on_behalf_of_content_owner: bool = False
-    content_owner_id: str = ''
+    content_owner_id: str = ""
     debug: bool = False

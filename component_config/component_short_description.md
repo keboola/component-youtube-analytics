@@ -1,1 +1,1 @@
-A leading online video platform where users can upload, share, and watch videos.
+Extracts YouTube Analytics reports via the YouTube Reporting API.
