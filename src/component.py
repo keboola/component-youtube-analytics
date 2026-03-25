@@ -80,9 +80,7 @@ class Component(ComponentBase):
         for rt in self.conf.report_settings.report_types:
             if rt in DEPRECATED_REPORT_TYPE_MAPPING:
                 new_rt = DEPRECATED_REPORT_TYPE_MAPPING[rt]
-                logging.warning(
-                    f"Report type '{rt}' is deprecated, automatically using '{new_rt}' instead."
-                )
+                logging.warning(f"Report type '{rt}' is deprecated, automatically using '{new_rt}' instead.")
                 migrated_types.append(new_rt)
             else:
                 migrated_types.append(rt)
