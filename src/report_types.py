@@ -319,6 +319,32 @@ report_types = {
             "red_watch_time_minutes",
         ],
     },
+    "channel_reach_basic_a1": {
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+        ],
+        "metrics": [
+            "video_thumbnail_impressions",
+            "video_thumbnail_impressions_ctr",
+        ],
+    },
+    "channel_reach_combined_a1": {
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "traffic_source_type",
+            "traffic_source_detail",
+            "operating_system",
+            "device_type",
+        ],
+        "metrics": [
+            "video_thumbnail_impressions",
+            "video_thumbnail_impressions_ctr",
+        ],
+    },
     "playlist_basic_a2": {
         "dimensions": [
             "date",
@@ -1193,6 +1219,32 @@ report_types = {
             "average_view_duration_percentage",
             "red_views",
             "red_watch_time_minutes",
+        ],
+    },
+    "content_owner_reach_basic_a1": {
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+        ],
+        "metrics": [
+            "video_thumbnail_impressions",
+            "video_thumbnail_impressions_ctr",
+        ],
+    },
+    "content_owner_reach_combined_a1": {
+        "dimensions": [
+            "date",
+            "channel_id",
+            "video_id",
+            "traffic_source_type",
+            "traffic_source_detail",
+            "operating_system",
+            "device_type",
+        ],
+        "metrics": [
+            "video_thumbnail_impressions",
+            "video_thumbnail_impressions_ctr",
         ],
     },
 }

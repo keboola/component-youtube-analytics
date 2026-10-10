@@ -48,6 +48,8 @@
                             "channel_sharing_service_a1",
                             "channel_subtitles_a3",
                             "channel_traffic_source_a3",
+                            "channel_reach_basic_a1",
+                            "channel_reach_combined_a1",
                             "playlist_basic_a2",
                             "playlist_combined_a2",
                             "playlist_device_os_a2",
@@ -75,7 +77,9 @@
                             "content_owner_ad_rates_a1",
                             "content_owner_estimated_revenue_a1",
                             "content_owner_asset_estimated_revenue_a1",
-                            "content_owner_asset_basic_a3"
+                            "content_owner_asset_basic_a3",
+                            "content_owner_reach_basic_a1",
+                            "content_owner_reach_combined_a1"
                         ],
                         "options": {
                             "enum_titles": [
@@ -91,6 +95,8 @@
                                 "Channel sharing service",
                                 "Channel subtitles",
                                 "Channel traffic sources",
+                                "Channel reach (thumbnail impressions and CTR)",
+                                "Channel reach combined (by traffic source and device)",
                                 "Playlist user activity",
                                 "Playlist combined",
                                 "Playlist device and OS",
@@ -118,7 +124,9 @@
                                 "Content owner ad rate reports",
                                 "Content owner estimated video revenue",
                                 "Content owner estimated asset revenue",
-                                "Content owner asset user activity"
+                                "Content owner asset user activity",
+                                "Content owner reach (thumbnail impressions and CTR)",
+                                "Content owner reach combined (by traffic source and device)"
                             ]
                         }
                     }
